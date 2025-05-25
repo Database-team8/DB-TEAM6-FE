@@ -6,6 +6,7 @@ import 'package:ajoufinder/ui/shared/widgets/comment_list_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/custom_comment_fab.dart';
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -300,9 +301,9 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
             style: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
           ),
           __buildBoardInfoRow(Icons.fmd_good_outlined, board.detailedLocation),
-          __buildBoardInfoRow(Icons.category_rounded, board.category),
+          __buildBoardInfoRow(Icons.shopping_bag_outlined, board.category),
           __buildBoardInfoRow(Icons.calendar_today_outlined, DateFormat('yyyy.MM.dd').format(board.createdAt)),
-          __buildBoardInfoRow(Icons.help_outline_rounded, board.status),
+          __buildBoardInfoRow(CupertinoIcons.checkmark_shield, board.status),
           const SizedBox(height: 5,),
           Text(
             board.description,

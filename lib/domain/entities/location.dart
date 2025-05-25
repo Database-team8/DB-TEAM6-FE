@@ -20,4 +20,12 @@ class Location {
       'location_name': locationName,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Location &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          locationName == other.locationName;
 }

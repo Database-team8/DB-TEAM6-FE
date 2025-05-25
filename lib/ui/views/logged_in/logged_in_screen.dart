@@ -139,7 +139,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
               MaterialPageRoute(builder: (context) => Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: 400),
-                  child: PostBoardWidget(),
+                  child: PostBoardWidget(lostCategory: _selectedIndex == 0 ? 'lost' : 'found'),
                 ),
               ),)
             );
