@@ -79,7 +79,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware{
                return Center(child: Text(viewModel.error!));
             }
             if (viewModel.boards.isNotEmpty) {
-              return BoardListWidget(boards: viewModel.boards);
+              return SingleChildScrollView(
+                child: BoardListWidget(boards: viewModel.boards)
+              );
             } else {
               return const Center(child: Text('게시글이 없습니다'));
             }

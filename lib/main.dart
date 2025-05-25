@@ -5,6 +5,7 @@ import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/condition_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CommentViewModel()),  
         ChangeNotifierProvider(create: (_) => AlarmViewModel()),
         ChangeNotifierProvider(create: (_) => ConditionViewModel()),
-        ChangeNotifierProvider(create: (_) => PageViewModel()),    
+        ChangeNotifierProvider(create: (_) => NavigatorBarViewModel()),
+        ChangeNotifierProvider(create: (context) => PageViewModel(
+          Provider.of<NavigatorBarViewModel>(context, listen: false),
+        ),),        
       ],
       child: MyApp(),
     )

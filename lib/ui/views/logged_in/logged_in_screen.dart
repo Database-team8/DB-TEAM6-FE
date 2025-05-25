@@ -8,6 +8,7 @@ import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
 import 'package:ajoufinder/ui/shared/widgets/post_board_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
 import 'package:ajoufinder/ui/views/account/account_screen.dart';
 import 'package:ajoufinder/ui/views/home/home_screen.dart';
@@ -24,7 +25,6 @@ class LoggedInScreen extends StatefulWidget {
 }
 
 class _LoggedInScreenState extends State<LoggedInScreen> {
-  int _selectedIndex = 0;
 
   Location? _selectedLocation;
   ItemType? _selectedItemType;
@@ -43,7 +43,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      Provider.of<NavigatorBarViewModel>(context, listen: false).updateCurrentPage(index);
       Provider.of<PageViewModel>(context, listen: false).configureFab(index);
       Provider.of<PageViewModel>(context, listen: false).configureAppbar(index);
     });
@@ -69,9 +69,10 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     _statusesFuture = _fetchStatuses();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(context, listen: false);
       final pageViewModel = Provider.of<PageViewModel>(context, listen: false);
-      pageViewModel.configureFab(_selectedIndex);
-      pageViewModel.configureAppbar(_selectedIndex);
+      pageViewModel.configureFab(navigatorBarViewModel.currentIndex);
+      pageViewModel.configureAppbar(navigatorBarViewModel.currentIndex);
     });
   }
 
@@ -82,6 +83,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(context);
 
     return Scaffold(
       appBar: PreferredSize(
@@ -120,14 +122,14 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
         ),
       body: SafeArea(
         child: IndexedStack(
-          index: _selectedIndex,
+          index: navigatorBarViewModel.currentIndex,
           children: _pages
         )
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
+      bottomNavigationBar: Consumer<NavigatorBarViewModel>(
+        builder: (context, navigatorBarViewModel, child) {
+          return BottomNavBar(onTap: _onItemTapped);
+        }),
       backgroundColor: theme.colorScheme.surface,
       floatingActionButton: Consumer<PageViewModel>(
         builder: (context, pageViewModel, child) {
@@ -139,7 +141,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
               MaterialPageRoute(builder: (context) => Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: 400),
-                  child: PostBoardWidget(lostCategory: _selectedIndex == 0 ? 'lost' : 'found'),
+                  child: PostBoardWidget(lostCategory: navigatorBarViewModel.currentIndex == 0 ? 'lost' : 'found'),
                 ),
               ),)
             );

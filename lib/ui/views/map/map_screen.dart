@@ -1,7 +1,10 @@
 import 'package:ajoufinder/data/services/google_map_service.dart';
+import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
 import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
+import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
 class MapScreen extends StatefulWidget{
 
@@ -68,34 +71,31 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Set<Marker> _createMarkers() {
+    final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(context);
     return {
       Marker(
         markerId: MarkerId('팔달관'),
         position: LatLng(37.28448, 127.0444),
         consumeTapEvents: true,
-        onTap: () {
-        },
+        onTap: () => navigatorBarViewModel.updateCurrentPage(0),
       ),
       Marker(
         markerId: MarkerId('원천관'),
         position: LatLng(37.28293, 127.0434), // 임의 좌표
         consumeTapEvents: true,
-        onTap: () {
-        },
+        onTap: () => navigatorBarViewModel.updateCurrentPage(0),
       ),
       Marker(
         markerId: MarkerId('토목실험동'),
         position: LatLng(37.28427, 127.0434), // 임의 좌표
         consumeTapEvents: true,
-        onTap: () {
-        },
+        onTap: () => navigatorBarViewModel.updateCurrentPage(0),
       ),
       Marker(
         markerId: MarkerId('북문'),
         position: LatLng(37.28543, 127.0441), // 임의 좌표
         consumeTapEvents: true,
-        onTap: () {
-        },
+        onTap: () => navigatorBarViewModel.updateCurrentPage(0),
       ),
     };
   }

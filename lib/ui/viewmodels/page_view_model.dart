@@ -1,7 +1,10 @@
 import 'package:ajoufinder/domain/utils/action_bar_type.dart';
+import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:flutter/material.dart';
 
 class PageViewModel extends ChangeNotifier{
+  final NavigatorBarViewModel navigatorBarViewModel;
+  
   bool _showFab = false;
   IconData? _fabIconData;
   String? _fabLabelText;
@@ -32,6 +35,12 @@ class PageViewModel extends ChangeNotifier{
   String? get hintText => _hintText;
   List<ActionBarType> get actionTypes => _actionTypes;
 
+  PageViewModel(this.navigatorBarViewModel) {
+    navigatorBarViewModel.addListener(_onNavBarChanged);
+    // 초기 상태 설정
+    _applyConfig(navigatorBarViewModel.currentIndex);
+  }
+
   void _clearFab() {
     _showFab = false;
     _fabIconData = null;
@@ -49,6 +58,16 @@ class PageViewModel extends ChangeNotifier{
     _searchFocusNode.unfocus();
     _hintText = null;
     _actionTypes = [];
+  }
+
+   void _onNavBarChanged() {
+    _applyConfig(navigatorBarViewModel.currentIndex);
+  }
+
+  void _applyConfig(int barIndex) {
+    configureFab(barIndex);
+    configureAppbar(barIndex);
+    notifyListeners();
   }
 
   void configureFab(int barIndex) {
