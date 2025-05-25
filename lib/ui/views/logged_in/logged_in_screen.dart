@@ -1,0 +1,369 @@
+import 'package:ajoufinder/domain/entities/item_type.dart';
+import 'package:ajoufinder/domain/entities/location.dart';
+import 'package:ajoufinder/domain/repository/board_repository.dart';
+import 'package:ajoufinder/domain/repository/location_repository.dart';
+import 'package:ajoufinder/domain/utils/action_bar_type.dart';
+import 'package:ajoufinder/injection_container.dart';
+import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
+import 'package:ajoufinder/ui/shared/widgets/post_board_widget.dart';
+import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
+import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
+import 'package:ajoufinder/ui/views/account/account_screen.dart';
+import 'package:ajoufinder/ui/views/home/home_screen.dart';
+import 'package:ajoufinder/ui/views/map/map_screen.dart';
+import 'package:ajoufinder/ui/views/notifications/notifications_tab_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class LoggedInScreen extends StatefulWidget {
+  const LoggedInScreen({super.key});
+
+  @override
+  _LoggedInScreenState createState() => _LoggedInScreenState();
+}
+
+class _LoggedInScreenState extends State<LoggedInScreen> {
+  int _selectedIndex = 0;
+
+  Location? _selectedLocation;
+  ItemType? _selectedItemType;
+  String? _selectedStatus;
+
+  late Future<List<Location>> _locationsFuture;
+  late Future<List<ItemType>> _itemTypesFuture;
+  late Future<List<String>> _statusesFuture;
+
+  final _pages = [
+    HomeScreen(lostCategory: 'lost'),
+    HomeScreen(lostCategory: 'found'),
+    MapScreen(),
+    AccountScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      Provider.of<PageViewModel>(context, listen: false).configureFab(index);
+      Provider.of<PageViewModel>(context, listen: false).configureAppbar(index);
+    });
+  }
+
+  Future<List<Location>> _fetchLocations() async {
+    return getIt<LocationRepository>().getAllLocations();
+  }
+
+  Future<List<ItemType>> _fetchItemTypes() async {
+    return getIt<BoardRepository>().getAllItemTypes();
+  }
+
+  Future<List<String>> _fetchStatuses() async {
+  return getIt<BoardRepository>().getAllItemStatuses();
+}
+
+  @override
+  void initState() {
+    super.initState();
+    _locationsFuture = _fetchLocations();
+    _itemTypesFuture = _fetchItemTypes();
+    _statusesFuture = _fetchStatuses();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pageViewModel = Provider.of<PageViewModel>(context, listen: false);
+      pageViewModel.configureFab(_selectedIndex);
+      pageViewModel.configureAppbar(_selectedIndex);
+    });
+  }
+
+  void _sendQuery() {
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Provider.of<PageViewModel>(context).extendAppbar ? Size.fromHeight(kToolbarHeight * 2) : Size.fromHeight(kToolbarHeight), 
+        child: Consumer<PageViewModel>(
+          builder: (context, pageViewModel, child) {
+            return pageViewModel.showAppbar
+            ? AppBar(
+              title: SearchBarWidget(
+                controller: pageViewModel.searchController, 
+                hintText: pageViewModel.hintText!, 
+                onSubmitted: pageViewModel.performSearch!,
+                focusNode: pageViewModel.searchFocusNode,
+                onClear: pageViewModel.onClear,
+              ),
+              actions: _buildActions(),
+              automaticallyImplyLeading: pageViewModel.isSearchBarWidgetActivated,
+              bottom: PreferredSize(
+                preferredSize: Provider.of<PageViewModel>(context).extendAppbar ? Size.fromHeight(kToolbarHeight) : Size.fromHeight(0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildLocationDropdown(),
+                      const SizedBox(width: 16,),
+                      _buildItemTypeDropdown(),
+                      const SizedBox(width: 16),
+                      _buildStatusDropdown(),
+                    ],
+                  ),
+              )),
+            )
+            : SizedBox();
+          }
+        ),
+        ),
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: _pages
+        )
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+      backgroundColor: theme.colorScheme.surface,
+      floatingActionButton: Consumer<PageViewModel>(
+        builder: (context, pageViewModel, child) {
+          return pageViewModel.showFab 
+          ? FloatingActionButton.extended(
+            onPressed: (){
+              Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 400),
+                  child: PostBoardWidget(),
+                ),
+              ),)
+            );
+          }, 
+            label: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(pageViewModel.fabLabelText!),
+            ),
+            icon: Icon(
+              pageViewModel.fabIconData, 
+              //theme 적용하는 법 찾아보기
+            ),  
+          )
+          : SizedBox();
+        }
+        ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  List<Widget> _buildActions() {
+    List<Widget> actions = [];
+
+    final pageViewModel = Provider.of<PageViewModel>(context);
+    final alarmViewModel = Provider.of<AlarmViewModel>(context);
+    final theme = Theme.of(context);
+    
+    for (var actionType in pageViewModel.actionTypes) {
+      switch (actionType) {
+        case ActionBarType.close:
+          actions.add(
+            IconButton(
+              onPressed: pageViewModel.toggleSearchBarWidgetActivated, 
+              icon: Icon(Icons.close_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
+            )
+          );
+          break;
+        case ActionBarType.alarms:
+          actions.add(
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 400),
+                        child: NotificationsTabScreen(),
+                        ),
+                    ),
+                  )
+                );
+              }, 
+              icon: alarmViewModel.hasNewAlarms() 
+              ? Icon(Icons.notifications_active_rounded, color: theme.colorScheme.primary.withValues(alpha: 0.3),)
+              : Icon(Icons.notifications_none_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
+              tooltip: '알림',
+            ),
+          );
+          break;
+        default:
+          break;
+      } 
+    }
+    return actions;
+  }
+
+  Widget _buildLocationDropdown() {
+  return FutureBuilder<List<Location>>(
+    future: _locationsFuture,
+    builder: (context, snapshot) {
+      final theme = Theme.of(context);
+
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return SizedBox(width: 120, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,))));
+      }
+      if (snapshot.hasError) {
+        return Text('위치 로딩 실패');
+      }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return Text('위치 정보 없음');
+      }
+      final locations = snapshot.data!;
+
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            width: 1.5
+          ),
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Location>(
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
+              hint: Text('위치'),
+              value: _selectedLocation,
+              items: locations.map((Location location) {
+                return DropdownMenuItem<Location>(
+                  value: location,
+                  child: Text(location.locationName, style: theme.textTheme.labelLarge),
+                );
+              }).toList(),
+              onChanged: (Location? newValue) {
+                setState(() {
+                  _selectedLocation = newValue;
+                });
+                _sendQuery();
+              },
+              underline: Container(),
+              isDense: true,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildItemTypeDropdown() {
+  return FutureBuilder<List<ItemType>>(
+    future: _itemTypesFuture,
+    builder: (context, snapshot) {
+      final theme = Theme.of(context);
+
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return SizedBox(width: 120, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,))));
+      }
+      if (snapshot.hasError) {
+        return Text('종류 로딩 실패');
+      }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return Text('종류 정보 없음');
+      }
+      final itemTypes = snapshot.data!;
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            width: 1.5
+          ),
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<ItemType>(
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
+              hint: Text('종류'),
+              value: _selectedItemType,
+              items: itemTypes.map((ItemType type) {
+                return DropdownMenuItem<ItemType>(
+                  value: type,
+                  child: Text(type.itemType, style: theme.textTheme.labelLarge),
+                );
+              }).toList(),
+              onChanged: (ItemType? newValue) {
+                setState(() {
+                  _selectedItemType = newValue;
+                });
+                _sendQuery(); // 선택 변경 시 쿼리
+              },
+              underline: Container(),
+              isDense: true,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildStatusDropdown() {
+  return FutureBuilder<List<String>>(
+    future: _statusesFuture,
+    builder: (context, snapshot) {
+      final theme = Theme.of(context);
+
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return SizedBox(width: 120, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,))));
+      }
+      if (snapshot.hasError) {
+        return Text('상태 로딩 실패');
+      }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return Text('상태 정보 없음');
+      }
+      final statuses = snapshot.data!;
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            width: 1.5
+          ),
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
+              hint: Text('상태'),
+              value: _selectedStatus,
+              items: statuses.map((String status) {
+                return DropdownMenuItem<String>(
+                  value: status,
+                  child: Text(status, style: theme.textTheme.labelLarge),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedStatus = newValue;
+                });
+                _sendQuery(); // 선택 변경 시 쿼리
+              },
+              underline: Container(),
+              isDense: true,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+}
