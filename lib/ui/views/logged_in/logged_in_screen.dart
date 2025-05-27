@@ -14,7 +14,7 @@ import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
 import 'package:ajoufinder/ui/views/account/account_screen.dart';
 import 'package:ajoufinder/ui/views/home/home_screen.dart';
 import 'package:ajoufinder/ui/views/map/map_screen.dart';
-import 'package:ajoufinder/ui/views/notifications/notifications_tab_screen.dart';
+import 'package:ajoufinder/ui/views/alarms/alarm_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -181,7 +181,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                     builder: (context) => Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: 400),
-                        child: NotificationsTabScreen(),
+                        child: AlarmScreen(),
                         ),
                     ),
                   )

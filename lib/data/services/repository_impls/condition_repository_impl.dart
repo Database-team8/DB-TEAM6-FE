@@ -16,7 +16,7 @@ class ConditionRepositoryImpl extends ConditionRepository{
         id: 1, 
         itemTypeId: 1, 
         userId: userId, 
-        category: 'category'
+        status: 'category'
       )
     ];
   }

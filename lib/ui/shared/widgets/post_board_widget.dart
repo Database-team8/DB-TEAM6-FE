@@ -286,7 +286,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         } else if (snapshot.hasError) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text('위치 목록을 불러오지 못했습니다.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+            child: Text('카테고리 목록을 불러오지 못했습니다.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
           );
         } else if (snapshot.hasData) {
           final itemTypes = snapshot.data!;

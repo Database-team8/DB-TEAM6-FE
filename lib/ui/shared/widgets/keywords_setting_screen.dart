@@ -3,7 +3,8 @@ import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart'; 
 import 'package:ajoufinder/domain/repository/board_repository.dart'; 
 import 'package:ajoufinder/domain/repository/location_repository.dart'; 
-import 'package:ajoufinder/injection_container.dart'; 
+import 'package:ajoufinder/injection_container.dart';
+import 'package:ajoufinder/ui/views/conditions/condition_screen.dart'; 
 import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';  
 import 'package:flutter/material.dart';  
 
@@ -82,20 +83,39 @@ class _KeywordsSettingScreenState extends State<KeywordsSettingScreen> {
     @override Widget build(BuildContext context) {
       final theme = Theme.of(context);  
 
-      return Scaffold( 
-        backgroundColor: theme.colorScheme.surface, 
-        appBar: AppBar( 
+      return DefaultTabController(
+        length: 2,
+        child: Scaffold( 
           backgroundColor: theme.colorScheme.surface, 
-          leading: IconButton( 
-            icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface), 
-            onPressed: () => Navigator.of(context).pop(), 
-          ), 
-          centerTitle: true, 
-          title: Text( '관심 물품 설정', style: TextStyle( color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, ),
-        ),), 
-        body: _buildBody() 
-      ); 
-    }  
+          appBar: AppBar( 
+            backgroundColor: theme.colorScheme.surface, 
+            leading: IconButton( 
+              icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface), 
+              onPressed: () => Navigator.of(context).pop(), 
+            ), 
+            centerTitle: true, 
+            title: Text( '관심 물품', style: TextStyle( color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, ),
+          ),
+          bottom: TabBar(
+            labelColor: theme.colorScheme.primary,
+            unselectedLabelColor: theme.colorScheme.surfaceTint,
+            indicatorColor: theme.colorScheme.primary,
+            indicatorWeight: 3,
+            tabs: const [
+              Tab(text: '관심 물품 추가'),
+              Tab(text: '관심 조건 리스트'),
+            ],
+          ),
+        ), 
+        body: TabBarView(
+          children: [
+            _buildBody(),
+            ConditionScreen(),
+          ]
+        ),
+      ),
+    ); 
+  }  
     
     Widget _buildBody() { 
       final theme = Theme.of(context);  
@@ -153,7 +173,8 @@ class _KeywordsSettingScreenState extends State<KeywordsSettingScreen> {
               onPressed: () { 
                 Navigator.of(context).pop(); 
               }, 
-              child: const Text('설정 저장'), 
+              child: Text('설정 저장', 
+              style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.onPrimary)), 
             ), 
           ) 
         ], 
