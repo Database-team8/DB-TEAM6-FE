@@ -1,12 +1,10 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class GoogleMapService {
-  late GoogleMapController _mapController;
+  final GoogleMapController _mapController;
 
-  void setMapController(GoogleMapController controller) {
-    _mapController = controller;
-  }
-
+  GoogleMapService(this._mapController);
+  
   Future<void> moveToPosition(
       double latitude, double longitude, double zoom) async {
     await _mapController.animateCamera(

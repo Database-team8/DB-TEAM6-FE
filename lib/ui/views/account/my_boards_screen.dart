@@ -61,7 +61,9 @@ class _MyBoardsScreenState extends State<MyBoardsScreen> {
       : (
         boardViewModel.boards.isEmpty 
         ? Center(child: Text('작성한 게시글이 없습니다.'))
-        : BoardListWidget(boards: boardViewModel.boards)
+        : SingleChildScrollView(
+          child: BoardListWidget(boards: boardViewModel.boards)
+        )
       )
     );
   }

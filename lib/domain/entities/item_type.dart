@@ -20,4 +20,6 @@ class ItemType {
       'item_type': itemType,
     };
   }
+
+  
 }

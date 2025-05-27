@@ -37,7 +37,7 @@ class PageViewModel extends ChangeNotifier{
 
   PageViewModel(this.navigatorBarViewModel) {
     navigatorBarViewModel.addListener(_onNavBarChanged);
-    // 초기 상태 설정
+    _searchFocusNode.addListener(_onSearchFocusChanged);
     _applyConfig(navigatorBarViewModel.currentIndex);
   }
 
@@ -45,6 +45,35 @@ class PageViewModel extends ChangeNotifier{
     _showFab = false;
     _fabIconData = null;
     _fabLabelText = null;
+  }
+
+  @override
+  void dispose() {
+    navigatorBarViewModel.removeListener(_onNavBarChanged);
+    _searchFocusNode.removeListener(_onSearchFocusChanged);
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _onSearchFocusChanged() {
+    if (_showAppbar && !_isSearchBarWidgetActivated) {
+      // 수동으로 검색바를 활성화하지 않았지만 포커스가 있는 경우
+      if (_searchFocusNode.hasFocus) {
+        _actionTypes = []; // 액션 버튼들 숨기기
+      } else {
+        // 포커스를 잃었을 때 원래 액션 버튼들 복원
+        _restoreActionTypes();
+      }
+      notifyListeners(); // UI 업데이트
+    }
+  }
+
+  void _restoreActionTypes() {
+    final currentIndex = navigatorBarViewModel.currentIndex;
+    if (currentIndex == 0 || currentIndex == 1 || currentIndex == 2) {
+      _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
+    }
   }
 
   void _clearAppbar() {
@@ -89,62 +118,85 @@ class PageViewModel extends ChangeNotifier{
   void configureAppbar(int barIndex) {
     switch (barIndex) {
       case 0:
+        _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
         _showAppbar = true;
         _extendAppbar = true;
         _onClear = () {
           //추후 작성
         };
+        _performSearch = (query) {
+          print('검색어: $query');
+        };
         _toggleSearchBarWidgetActivated = () {
           _isSearchBarWidgetActivated = !_isSearchBarWidgetActivated;
           
           if (_isSearchBarWidgetActivated) {
+            _actionTypes = [];
             Future.delayed(const Duration(microseconds: 75),() {
               _searchFocusNode.requestFocus();
-              _actionTypes = [ActionBarType.close];
             }
           );
           } else {
             _searchController.clear();
-            _searchController.clear();
-            _actionTypes = [ActionBarType.filter, ActionBarType.alarms];
+            _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
           }
+          notifyListeners();
         };
-        _performSearch = (query) {
-          //추후 작성
-        };
-        _actionTypes = [ActionBarType.filter, ActionBarType.alarms];
         _hintText = '분실글 검색';
         break;
       case 1:
+        _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
         _showAppbar = true;
         _extendAppbar = true;
         _onClear = () {
           //추후 작성
         };
+        _performSearch = (query) {
+          print('검색어: $query');
+        };
         _toggleSearchBarWidgetActivated = () {
           _isSearchBarWidgetActivated = !_isSearchBarWidgetActivated;
           
           if (_isSearchBarWidgetActivated) {
+            _actionTypes = [];
             Future.delayed(const Duration(microseconds: 75),() {
               _searchFocusNode.requestFocus();
             }
           );
           } else {
             _searchController.clear();
-            _searchController.clear();
+            _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
           }
+          notifyListeners();
         };
-        _performSearch = (query) {
-          //추후 작성
-        };
-        _actionTypes = [ActionBarType.filter, ActionBarType.alarms];
         _hintText = '분실글 검색';
         break;
       case 2:
-        //_showAppbar = true;
-        //_extendAppbar = false;
-        _hideAppbar();
-        //추후 작성
+        _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
+        _showAppbar = true;
+        _extendAppbar = true;
+        _onClear = () {
+          //추후 작성
+        };
+        _performSearch = (query) {
+          print('검색어: $query');
+        };
+        _toggleSearchBarWidgetActivated = () {
+          _isSearchBarWidgetActivated = !_isSearchBarWidgetActivated;
+          
+          if (_isSearchBarWidgetActivated) {
+            _actionTypes = [];
+            Future.delayed(const Duration(microseconds: 75),() {
+              _searchFocusNode.requestFocus();
+            }
+          );
+          } else {
+            _searchController.clear();
+            _actionTypes = [ActionBarType.configCondtions, ActionBarType.alarms];
+          }
+          notifyListeners();
+        };
+        _hintText = '장소 검색';
         break;
       default:
         _hideAppbar();

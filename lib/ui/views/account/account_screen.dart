@@ -1,3 +1,4 @@
+import 'package:ajoufinder/ui/shared/widgets/keywords_setting_screen.dart';
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/views/account/my_boards_screen.dart';
 import 'package:ajoufinder/ui/views/account/my_bookmarked_boards_screen.dart';
@@ -188,9 +189,15 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           _buildClickableListItem(
             title: '관심 물품 설정',
-            onTap: () {
-              
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 400),
+                  child: KeywordsSettingScreen()
+                ),
+              )),
+            ),
             context: context
           ),
         ],
@@ -238,17 +245,15 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           _buildClickableListItem(
             title: '내 게시글 보기',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 400),
-                    child: MyBoardsScreen()
-                  ),
-                )),
-              );
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 400),
+                  child: MyBoardsScreen()
+                ),
+              )),
+            ),
             context: context
           ),
           _buildClickableListItem(

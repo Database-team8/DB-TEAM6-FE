@@ -1,3 +1,3 @@
 enum ActionBarType {
-  close, alarms, filter,
+  close, alarms, configCondtions,
 }

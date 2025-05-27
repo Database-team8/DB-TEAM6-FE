@@ -1,6 +1,4 @@
 import 'package:ajoufinder/data/services/google_map_service.dart';
-import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
-import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,10 +13,8 @@ class MapScreen extends StatefulWidget{
 }
 
 class _MapScreenState extends State<MapScreen> {
-    late GoogleMapController _mapController;
-    final GoogleMapService _mapService = GoogleMapService();
-    final TextEditingController _searchController = TextEditingController();
-    final FocusNode _searchFocusNode = FocusNode();
+    GoogleMapController? _mapController;
+    GoogleMapService? _mapService;
 
     final CameraPosition _initialPosition = CameraPosition(
       target: LatLng(37.2833808, 127.0460720),
@@ -27,45 +23,28 @@ class _MapScreenState extends State<MapScreen> {
 
     @override
     void dispose() {
-      _searchController.dispose();
-      _searchFocusNode.dispose();
       super.dispose();
-    }
-
-    void _performMapSearch(String query) {
-      //추후 구현
-      _searchFocusNode.unfocus();
     }
 
       @override
       Widget build(BuildContext context) {
+        
         return Stack(
         children: [
           GoogleMap(
             initialCameraPosition: _initialPosition,
             onMapCreated: (GoogleMapController controller) {
               _mapController = controller;
-              _mapService.setMapController(controller);
+              _mapService = GoogleMapService(controller);
             },
             markers: _createMarkers(),
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
             onTap: (_) { // 맵을 탭하면 검색창 포커스 해제
-              _searchFocusNode.unfocus();
+              
             },
           ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10, // 상태바 높이 고려
-            left: 15,
-            right: 15,
-            child: SearchBarWidget(
-              controller: _searchController,
-              hintText: '장소, 주소 검색',
-              onSubmitted: _performMapSearch,
-              focusNode: _searchFocusNode,
-              onClear: () {},
-            ),
-          ),
+          
         ],
       );
   }

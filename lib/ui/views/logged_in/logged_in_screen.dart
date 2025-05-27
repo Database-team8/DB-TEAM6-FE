@@ -5,6 +5,7 @@ import 'package:ajoufinder/domain/repository/location_repository.dart';
 import 'package:ajoufinder/domain/utils/action_bar_type.dart';
 import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
+import 'package:ajoufinder/ui/shared/widgets/keywords_setting_screen.dart';
 import 'package:ajoufinder/ui/shared/widgets/post_board_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
@@ -115,16 +116,17 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                     ],
                   ),
               )),
+              backgroundColor: Colors.transparent,
+              elevation: 6.0,
+              scrolledUnderElevation: 12.0,
             )
             : SizedBox();
           }
         ),
         ),
-      body: SafeArea(
-        child: IndexedStack(
-          index: navigatorBarViewModel.currentIndex,
-          children: _pages
-        )
+      body: IndexedStack(
+        index: navigatorBarViewModel.currentIndex,
+        children: _pages
       ),
       bottomNavigationBar: Consumer<NavigatorBarViewModel>(
         builder: (context, navigatorBarViewModel, child) {
@@ -150,15 +152,14 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Text(pageViewModel.fabLabelText!),
             ),
-            icon: Icon(
-              pageViewModel.fabIconData, 
-              //theme 적용하는 법 찾아보기
-            ),  
+            icon: Icon(pageViewModel.fabIconData, ),  
           )
           : SizedBox();
         }
         ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      extendBodyBehindAppBar: true,
+      extendBody: true,
     );
   }
 
@@ -171,14 +172,6 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     
     for (var actionType in pageViewModel.actionTypes) {
       switch (actionType) {
-        case ActionBarType.close:
-          actions.add(
-            IconButton(
-              onPressed: pageViewModel.toggleSearchBarWidgetActivated, 
-              icon: Icon(Icons.close_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
-            )
-          );
-          break;
         case ActionBarType.alarms:
           actions.add(
             IconButton(
@@ -196,8 +189,25 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
               }, 
               icon: alarmViewModel.hasNewAlarms() 
               ? Icon(Icons.notifications_active_rounded, color: theme.colorScheme.primary.withValues(alpha: 0.3),)
-              : Icon(Icons.notifications_none_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
+              : Icon(Icons.notifications_none_rounded, color: theme.colorScheme.onSurfaceVariant,),
               tooltip: '알림',
+            ),
+          );
+          break;
+        case ActionBarType.configCondtions:
+          actions.add(
+            IconButton(
+              onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 400),
+                  child: KeywordsSettingScreen()
+                ),
+              )),
+            ),
+              icon: Icon(Icons.tune_rounded, color: theme.colorScheme.onSurfaceVariant,),
+              tooltip: '관심 물품 설정',
             ),
           );
           break;
@@ -213,6 +223,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     future: _locationsFuture,
     builder: (context, snapshot) {
       final theme = Theme.of(context);
+      final lineColor = theme.colorScheme.onSurfaceVariant;
 
       if (snapshot.connectionState == ConnectionState.waiting) {
         return SizedBox(width: 120, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,))));
@@ -228,22 +239,30 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
       return DecoratedBox(
         decoration: BoxDecoration(
           border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            width: 1.5
+            color: lineColor,
+            width: 1.5,
           ),
+          color: theme.colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow,
+              blurRadius: 4.0,
+              offset: Offset(0, 2),
+            ),
+          ],
           borderRadius: BorderRadius.circular(20.0),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<Location>(
-              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
-              hint: Text('위치'),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor,),
+              hint: Text('위치', style: theme.textTheme.labelLarge!.copyWith(color: lineColor) ),
               value: _selectedLocation,
               items: locations.map((Location location) {
                 return DropdownMenuItem<Location>(
                   value: location,
-                  child: Text(location.locationName, style: theme.textTheme.labelLarge),
+                  child: Text(location.locationName, style: theme.textTheme.labelLarge!.copyWith(color: lineColor)),
                 );
               }).toList(),
               onChanged: (Location? newValue) {
@@ -254,6 +273,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
               },
               underline: Container(),
               isDense: true,
+              dropdownColor: theme.colorScheme.surface,
             ),
           ),
         ),
@@ -267,6 +287,7 @@ Widget _buildItemTypeDropdown() {
     future: _itemTypesFuture,
     builder: (context, snapshot) {
       final theme = Theme.of(context);
+      final lineColor = theme.colorScheme.onSurfaceVariant;
 
       if (snapshot.connectionState == ConnectionState.waiting) {
         return SizedBox(width: 120, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,))));
@@ -281,22 +302,30 @@ Widget _buildItemTypeDropdown() {
       return DecoratedBox(
         decoration: BoxDecoration(
           border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            color: lineColor,
             width: 1.5
           ),
+          color: theme.colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow,
+              blurRadius: 4.0,
+              offset: Offset(0, 2),
+            ),
+          ],
           borderRadius: BorderRadius.circular(20.0),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<ItemType>(
-              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
-              hint: Text('종류'),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor,),
+              hint: Text('종류', style: theme.textTheme.labelLarge!.copyWith(color: lineColor)),
               value: _selectedItemType,
               items: itemTypes.map((ItemType type) {
                 return DropdownMenuItem<ItemType>(
                   value: type,
-                  child: Text(type.itemType, style: theme.textTheme.labelLarge),
+                  child: Text(type.itemType, style: theme.textTheme.labelLarge!.copyWith(color: lineColor)),
                 );
               }).toList(),
               onChanged: (ItemType? newValue) {
@@ -307,6 +336,7 @@ Widget _buildItemTypeDropdown() {
               },
               underline: Container(),
               isDense: true,
+              dropdownColor: theme.colorScheme.surface,
             ),
           ),
         ),
@@ -320,6 +350,7 @@ Widget _buildStatusDropdown() {
     future: _statusesFuture,
     builder: (context, snapshot) {
       final theme = Theme.of(context);
+      final lineColor = theme.colorScheme.onSurfaceVariant;
 
       if (snapshot.connectionState == ConnectionState.waiting) {
         return SizedBox(width: 120, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,))));
@@ -334,22 +365,30 @@ Widget _buildStatusDropdown() {
       return DecoratedBox(
         decoration: BoxDecoration(
           border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            color: lineColor,
             width: 1.5
           ),
+          color: theme.colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow,
+              blurRadius: 4.0,
+              offset: Offset(0, 2),
+            ),
+          ],
           borderRadius: BorderRadius.circular(20.0),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3),),
-              hint: Text('상태'),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor,),
+              hint: Text('상태', style: theme.textTheme.labelLarge!.copyWith(color: lineColor)),
               value: _selectedStatus,
               items: statuses.map((String status) {
                 return DropdownMenuItem<String>(
                   value: status,
-                  child: Text(status, style: theme.textTheme.labelLarge),
+                  child: Text(status, style: theme.textTheme.labelLarge!.copyWith(color: lineColor)),
                 );
               }).toList(),
               onChanged: (String? newValue) {
@@ -360,6 +399,7 @@ Widget _buildStatusDropdown() {
               },
               underline: Container(),
               isDense: true,
+              dropdownColor: theme.colorScheme.surface,
             ),
           ),
         ),

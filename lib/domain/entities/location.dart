@@ -1,7 +1,7 @@
 class Location {
   final int id;
   final String locationName;
-
+  
   Location({
     required this.id,
     required this.locationName,
