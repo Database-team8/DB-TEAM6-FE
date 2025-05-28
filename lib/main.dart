@@ -1,3 +1,6 @@
+import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
+import 'package:ajoufinder/domain/repository/user_repository.dart';
+import 'package:ajoufinder/domain/usecases/logout_usecase.dart';
 import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/auth_gate.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
@@ -19,7 +22,12 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),  
+        ChangeNotifierProvider(create: (_)  => AuthViewModel(
+            getIt<UserRepository>(), 
+            getIt<CookieService>(),
+            getIt<LogoutUsecase>(),
+          ),
+        ),  
         ChangeNotifierProvider(create: (_) => BoardViewModel()),  
         ChangeNotifierProvider(create: (_) => CommentViewModel()),  
         ChangeNotifierProvider(create: (_) => AlarmViewModel()),

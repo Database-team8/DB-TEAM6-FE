@@ -20,7 +20,12 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     
     return ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.only(
+    top: MediaQuery.of(context).padding.top + kToolbarHeight, // AppBar 높이 고려
+    bottom: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight, // BottomNavBar 높이 고려
+    left: 16.0,
+    right: 16.0,
+  ),
         children: [
           _buildMyInfoSection(),
           const SizedBox(height: 28),
@@ -337,12 +342,47 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildLogoutButton() {
-    final theme = Theme.of(context);
+  final theme = Theme.of(context);
+  final authViewModel = Provider.of<AuthViewModel>(context);
 
-    return ElevatedButton(
-      onPressed: () => Provider.of<AuthViewModel>(context, listen: false).logout(), 
-      style: theme.elevatedButtonTheme.style!.copyWith(backgroundColor: WidgetStateProperty.all(theme.colorScheme.error)),
-      child: Text('로그아웃', style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onError)),
-    );
-  }
+  return ElevatedButton(
+    onPressed: authViewModel.isLoading
+        ? null
+        : () async {
+            try {
+              await authViewModel.logout();
+              // 로그아웃 성공 후 네비게이션 등 추가 작업 (필요하다면 ViewModel에서 처리하거나 여기서 직접)
+              // 예: Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => LoginScreen()), (route) => false);
+              // ViewModel에서 isLoggedIn 상태가 변경되면 Consumer 등을 통해 자동으로 화면 전환될 수도 있음
+            } catch (e) {
+              if (context.mounted) { // 위젯이 여전히 마운트되어 있는지 확인
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('로그아웃 중 오류가 발생했습니다: ${e.toString()}')),
+                );
+              }
+            }
+          },
+    style: theme.elevatedButtonTheme.style!.copyWith(
+      backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
+            return theme.colorScheme.error.withOpacity(0.5); // 비활성화 시 색상
+          }
+          return theme.colorScheme.error; // 기본 에러 색상
+        },
+      ),
+    ),
+    child: authViewModel.isLoading
+        ? SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.0,
+              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onError),
+            ),
+          )
+        : Text('로그아웃', style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onError)),
+  );
+}
+
 }
