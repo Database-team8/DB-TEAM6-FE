@@ -14,6 +14,7 @@ import 'package:ajoufinder/domain/repository/condition_repository.dart';
 import 'package:ajoufinder/domain/repository/location_repository.dart';
 import 'package:ajoufinder/domain/repository/alarm_repository.dart';
 import 'package:ajoufinder/domain/repository/user_repository.dart';
+import 'package:ajoufinder/domain/usecases/login_usecase.dart';
 import 'package:ajoufinder/domain/usecases/logout_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
@@ -29,6 +30,7 @@ Future<void> setUpDependencies() async {
   getIt.registerLazySingleton<LocationRepository>(() => LocationRepositoryImpl());
   getIt.registerLazySingleton<ConditionRepository>(() => ConditionRepositoryImpl());
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(getIt<http.Client>()));
-   getIt.registerFactory<LogoutUsecase>(() => LogoutUsecase(getIt<AuthRepository>()),);
+  getIt.registerFactory<LogoutUsecase>(() => LogoutUsecase(getIt<AuthRepository>()),);
+  getIt.registerFactory<LoginUsecase>(() => LoginUsecase(getIt<AuthRepository>()),);
   getIt.registerLazySingleton<CookieService>(() => CookieServiceWeb());
 }

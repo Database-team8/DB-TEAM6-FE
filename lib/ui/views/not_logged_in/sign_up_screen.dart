@@ -1,5 +1,4 @@
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
-import 'package:ajoufinder/ui/views/home/home_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +37,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-      final (isSuccess, message) = await authViewModel.signUp(
+      await authViewModel.signUp(
         email: widget.emailController.text,
         password: widget.passwordController.text,
         name: widget.nameController.text,
@@ -46,20 +45,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         phone: widget.phoneNumberController.text,
         description: widget.descriptionController.text,
         context: context,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message),),
-      );
-
-      if (isSuccess) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(lostCategory: 'lost'),
-          ),
-        );
-      }
+      );// 다시 쓰기
     }
   }
 

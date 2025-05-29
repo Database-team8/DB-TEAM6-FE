@@ -1,22 +1,22 @@
 class SignUpResponse {
-  final bool isSuccess;
   final String code;
-  final String? message;
+  final String message;
   final int result;
+  final bool isSuccess;
 
   SignUpResponse({
-    required this.isSuccess,
     required this.code,
     required this.message,
     required this.result,
+    required this.isSuccess,
   }); 
 
   factory SignUpResponse.fromJson(Map<String, dynamic> json) {
     return SignUpResponse(
-      isSuccess: json['isSuccess'] as bool,
       code: json['code'] as String,
       message: json['message'] as String,
       result: json['result'] as int,
+      isSuccess: json['isSuccess'] as bool,
     );
   }
 

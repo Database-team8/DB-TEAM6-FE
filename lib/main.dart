@@ -1,5 +1,6 @@
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
 import 'package:ajoufinder/domain/repository/user_repository.dart';
+import 'package:ajoufinder/domain/usecases/login_usecase.dart';
 import 'package:ajoufinder/domain/usecases/logout_usecase.dart';
 import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/auth_gate.dart';
@@ -26,6 +27,7 @@ void main() async {
             getIt<UserRepository>(), 
             getIt<CookieService>(),
             getIt<LogoutUsecase>(),
+            getIt<LoginUsecase>(),
           ),
         ),  
         ChangeNotifierProvider(create: (_) => BoardViewModel()),  

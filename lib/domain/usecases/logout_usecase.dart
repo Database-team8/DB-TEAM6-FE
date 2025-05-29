@@ -17,8 +17,8 @@ class LogoutUsecase {
       if (response.isSuccess) {
         print('로그아웃 성공 (Usecase): ${response.message}');
         // 이 시점에서 클라이언트 측 토큰 삭제(CookieService 사용)는
-        // 보통 이 유스케이스를 호출한 ViewModel/Presenter에서 처리합니다.
-        // 유스케이스는 주로 비즈니스 로직(서버와의 통신 조정)에 집중합니다.
+        // 보통 이 유스케이스를 호출한 ViewModel/Presenter에서 처리합니다. 완
+        // 유스케이스는 주로 비즈니스 로직(서버와의 통신 조정)에 집중합니다. 
       } else {
         print('로그아웃 실패 (Usecase): ${response.message}, 코드: ${response.code}');
       }
