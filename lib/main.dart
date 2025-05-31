@@ -1,7 +1,16 @@
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
-import 'package:ajoufinder/domain/repository/user_repository.dart';
-import 'package:ajoufinder/domain/usecases/login_usecase.dart';
-import 'package:ajoufinder/domain/usecases/logout_usecase.dart';
+import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
+import 'package:ajoufinder/domain/usecases/location/locations_usecase.dart';
+import 'package:ajoufinder/domain/usecases/auth/login_usecase.dart';
+import 'package:ajoufinder/domain/usecases/auth/logout_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/lost_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/my_comments_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/profile_usecase.dart';
 import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/auth_gate.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
@@ -24,15 +33,27 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_)  => AuthViewModel(
-            getIt<UserRepository>(), 
             getIt<CookieService>(),
             getIt<LogoutUsecase>(),
             getIt<LoginUsecase>(),
+            getIt<ChangePasswordUsecase>(),
+            getIt<ProfileUsecase>(),
           ),
         ),  
-        ChangeNotifierProvider(create: (_) => BoardViewModel()),  
-        ChangeNotifierProvider(create: (_) => CommentViewModel()),  
-        ChangeNotifierProvider(create: (_) => AlarmViewModel()),
+        ChangeNotifierProvider(create: (_) => BoardViewModel(
+          getIt<ItemtypesUsecase>(),
+          getIt<LocationsUsecase>(),
+          getIt<MyBoardsUsecase>(),
+          getIt<LostBoardsUsecase>(),
+          getIt<FoundBoardsUsecase>(),
+          getIt<DetailedBoardUsecase>(),
+        )),  
+        ChangeNotifierProvider(create: (_) => CommentViewModel(
+          getIt<MyCommentsUsecase>(),
+        )),  
+        ChangeNotifierProvider(create: (_) => AlarmViewModel(
+          getIt<MyAlarmsUsecase>(),
+        )),
         ChangeNotifierProvider(create: (_) => ConditionViewModel()),
         ChangeNotifierProvider(create: (_) => NavigatorBarViewModel()),
         ChangeNotifierProvider(create: (context) => PageViewModel(

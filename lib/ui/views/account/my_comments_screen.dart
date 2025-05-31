@@ -18,12 +18,8 @@ class _MyCommentsScreenState extends State<MyCommentsScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       final commentViewModel = Provider.of<CommentViewModel>(context, listen: false);
-      
-      if (authViewModel.userUid != null) {
-        commentViewModel.fetchCommentsByUserId(uuid: authViewModel.userUid!);
-      }
+      commentViewModel.fetchMyComments();
     });
   }
 
@@ -58,6 +54,6 @@ class _MyCommentsScreenState extends State<MyCommentsScreen> {
   Widget _buildBodyContent({required CommentViewModel commentViewModel, required AuthViewModel authViewModel}) {
     return commentViewModel.isLoading
     ? Center(child: CircularProgressIndicator())
-    : CommentListWidget.forUser(userId: authViewModel.userUid);
+    : CommentListWidget.forCurrentUser();
   }
 }

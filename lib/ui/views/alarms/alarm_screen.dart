@@ -1,6 +1,5 @@
 import 'package:ajoufinder/ui/shared/widgets/alarm_list_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
-import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,13 +20,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   Future<void> _fetchAlarms() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    if (authViewModel.userUid != null) {
-      await Provider.of<AlarmViewModel>(context, listen: false)
-          .fetchAlarms(uuid: authViewModel.userUid!);
-    } else {
-      print("User UID is null, cannot fetch alarms.");
-    }
+    final alarmViewModel = Provider.of<AlarmViewModel>(context, listen: false);
+    await alarmViewModel.fetchMyAlarms();    
   }
 
   @override

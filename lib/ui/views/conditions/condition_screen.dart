@@ -24,7 +24,7 @@ class _ConditionScreenState extends State<ConditionScreen> {
 
   Future<void> _fetchConditions() async {
    final authViewModel = Provider.of<AuthViewModel>(context, listen: false); 
-   await Provider.of<ConditionViewModel>(context, listen:false).fetchConditions(uuid: authViewModel.userUid!);
+   await Provider.of<ConditionViewModel>(context, listen:false).fetchConditions();
   }
 
   @override

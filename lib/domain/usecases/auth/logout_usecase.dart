@@ -1,4 +1,4 @@
-import 'package:ajoufinder/data/dto/logout/logout_response.dart';
+import 'package:ajoufinder/data/dto/auth/logout/logout_response.dart';
 import 'package:ajoufinder/domain/repository/auth_repository.dart';
 
 class LogoutUsecase {

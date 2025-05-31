@@ -1,17 +1,13 @@
 import 'dart:io';
-
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
-import 'package:ajoufinder/domain/repository/board_repository.dart';
-import 'package:ajoufinder/domain/repository/location_repository.dart';
-import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class PostBoardWidget extends StatefulWidget{
+class PostBoardWidget extends StatefulWidget {
   final String lostCategory;
   const PostBoardWidget({super.key, required this.lostCategory});
 
@@ -70,8 +66,13 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   Future<void> _submitBoard() async {
     if (_formKey.currentState!.validate()) {
       try {
-        final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
-        await boardViewModel.addBoard(/** 파라미터 추후 구현*/);
+        final boardViewModel = Provider.of<BoardViewModel>(
+          context,
+          listen: false,
+        );
+        await boardViewModel.addBoard(
+          /** 파라미터 추후 구현*/
+        );
 
         if (mounted) {
           Navigator.of(context).pop();
@@ -85,6 +86,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final boardViewModel = Provider.of<BoardViewModel>(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -105,11 +107,11 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
               const SizedBox(height: 20),
               _buildTitleTextField(),
               const SizedBox(height: 16),
-              _buildLocationDropdown(),
+              _buildLocationDropdown(boardViewModel),
               const SizedBox(height: 16),
               _buildDetailedLocationTextField(),
               const SizedBox(height: 16),
-              _buildCategoryDropdown(),
+              _buildItemTypeDropdown(boardViewModel),
               const SizedBox(height: 16),
               _buildStatusDropdown(),
               const SizedBox(height: 16),
@@ -122,7 +124,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _submitBoard, 
+        onPressed: _submitBoard,
         label: Text('제출'),
         icon: Icon(Icons.add),
       ),
@@ -142,21 +144,31 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
           border: Border.all(color: theme.dividerColor, width: 1.0),
         ),
         alignment: Alignment.center,
-        child: _selectedImage != null
-        ? Image.file(
-          _selectedImage!,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-        )
-        : Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.image_rounded, size: 60, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 8),
-            Text('사진을 첨부해주세요', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-          ],
-        ),
+        child:
+            _selectedImage != null
+                ? Image.file(
+                  _selectedImage!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                )
+                : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_rounded,
+                      size: 60,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '사진을 첨부해주세요',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
       ),
     );
   }
@@ -169,7 +181,10 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
       decoration: InputDecoration(
         hintText: '제목을 입력해주세요.',
         border: UnderlineInputBorder(),
-        hintStyle: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurfaceVariant)
+        hintStyle: theme.textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return '제목을 입력해주세요.';
@@ -178,53 +193,74 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
     );
   }
 
-  Widget _buildLocationDropdown() {
+  Widget _buildLocationDropdown(BoardViewModel boardViewModel) {
     final theme = Theme.of(context);
-    final locationRepository = getIt<LocationRepository>();
+    final lineColor = theme.colorScheme.onSurfaceVariant;
 
-    return FutureBuilder(
-      future: locationRepository.getAllLocations(), 
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        } else if (snapshot.hasError) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text('위치 목록을 불러오지 못했습니다.', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error)),
-          );
-        } else if (snapshot.hasData) {
-          final locations = snapshot.data!;
-
-           return DropdownButtonFormField<Location>(
-            value: locations.any((loc) => loc == _selectedLocation) ? _selectedLocation : null,
-            decoration: InputDecoration(
-              border: InputBorder.none, 
-              prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 8, right: 12),
-                child: Icon(Icons.place_outlined, color: theme.colorScheme.onSurfaceVariant),
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    if (boardViewModel.isLoadingLocations) {
+      return SizedBox(
+        width: 100,
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+    if (boardViewModel.locationError != null) {
+      return Text('위치 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
+    }
+    if (boardViewModel.locations.isEmpty) {
+      return Text('위치 정보 없음');
+    }
+    final locations = boardViewModel.locations;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: lineColor, width: 1.0), // 테두리 두께 조정
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow,
+            blurRadius: 2.0,
+            offset: Offset(0, 1),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(16.0), // 반지름 조정
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Location>(
+            icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
+            hint: Text(
+              '위치',
+              style: theme.textTheme.labelMedium!.copyWith(color: lineColor),
             ),
-            hint: Text('분실 장소를 선택해주세요.',style: theme.textTheme.bodySmall,),
-            isExpanded: true,
-            items: locations.map((loc) => DropdownMenuItem<Location>(
-              value: loc,
-              child: Text(loc.locationName),
-              )
-            ).toList(),
-            onChanged: ((value) {
+            value: _selectedLocation,
+            items:
+                locations.map((Location location) {
+                  return DropdownMenuItem<Location>(
+                    value: location,
+                    child: Text(
+                      location.locationName,
+                      style: theme.textTheme.labelMedium!.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  );
+                }).toList(),
+            onChanged: (Location? newValue) {
               setState(() {
-                _selectedLocation = value;
+                _selectedLocation = newValue;
               });
-            }),
-           );
-        } else {
-          return const SizedBox.shrink();
-        }
-      }
+            },
+            isDense: true,
+            dropdownColor: theme.colorScheme.surface,
+          ),
+        ),
+      ),
     );
   }
 
@@ -244,80 +280,109 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         prefixIcon: Icon(CupertinoIcons.checkmark_shield),
       ),
       isExpanded: true,
-      items: statusOptions.map((status) => DropdownMenuItem<String>(
-        value: status['value'],
-        child: Text(status['label']!),
-      )).toList(),
+      items:
+          statusOptions
+              .map(
+                (status) => DropdownMenuItem<String>(
+                  value: status['value'],
+                  child: Text(status['label']!),
+                ),
+              )
+              .toList(),
       onChanged: (value) {
         setState(() {
           _selectedStatus = value;
         });
       },
-      validator: (value) => value == null || value.isEmpty ? '상태를 선택해주세요.' : null,
+      validator:
+          (value) => value == null || value.isEmpty ? '상태를 선택해주세요.' : null,
     );
   }
-
 
   Widget _buildDetailedLocationTextField() {
     final theme = Theme.of(context);
     return TextFormField(
       controller: _detailedLocationController,
       decoration: InputDecoration(
-        border: InputBorder.none, 
+        border: InputBorder.none,
         hintText: '분실 장소의 추가정보를 작성해주세요 (ex. 102호)',
         hintStyle: theme.textTheme.bodySmall,
-        prefixIcon: Icon(Icons.place_outlined, color: theme.colorScheme.onSurfaceVariant),
+        prefixIcon: Icon(
+          Icons.place_outlined,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
 
-  Widget _buildCategoryDropdown() {
+  Widget _buildItemTypeDropdown(BoardViewModel boardViewModel) {
     final theme = Theme.of(context);
-    final boardRepository = getIt<BoardRepository>();
-    
-    return FutureBuilder(
-      future: boardRepository.getAllItemTypes(), 
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        } else if (snapshot.hasError) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text('카테고리 목록을 불러오지 못했습니다.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
-          );
-        } else if (snapshot.hasData) {
-          final itemTypes = snapshot.data!;
+    final lineColor = theme.colorScheme.onSurfaceVariant;
 
-           return DropdownButtonFormField<ItemType>(
-            value: itemTypes.any((itype) => itype == _selectedItemType) ? _selectedItemType : null,
-            decoration: InputDecoration(
-              border: InputBorder.none, 
-              prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 8, right: 12),
-                child: Icon(Icons.shopping_bag_outlined, color: theme.colorScheme.onSurfaceVariant),
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    if (boardViewModel.isLoadingItemTypes) {
+      return SizedBox(
+        width: 100,
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+    if (boardViewModel.itemTypeError != null) {
+      return Text('종류 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
+    }
+    if (boardViewModel.itemTypes.isEmpty) {
+      return Text('종류 정보 없음');
+    }
+    final itemTypes = boardViewModel.itemTypes;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: lineColor, width: 1.0),
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow,
+            blurRadius: 2.0,
+            offset: Offset(0, 1),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<ItemType>(
+            icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
+            hint: Text(
+              '종류',
+              style: theme.textTheme.labelMedium!.copyWith(color: lineColor),
             ),
-            hint: Text('종류를 선택해주세요.',style: theme.textTheme.bodySmall,),
-            isExpanded: true,
-            items: itemTypes.map((iType) => DropdownMenuItem<ItemType>(
-              value: iType,
-              child: Text(iType.itemType),
-              )
-            ).toList(),
-            onChanged: ((value) {
+            value: _selectedItemType,
+            items:
+                itemTypes.map((ItemType type) {
+                  return DropdownMenuItem<ItemType>(
+                    value: type,
+                    child: Text(
+                      type.itemType,
+                      style: theme.textTheme.labelMedium!.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  );
+                }).toList(),
+            onChanged: (ItemType? newValue) {
               setState(() {
-                _selectedItemType = value;
+                _selectedItemType = newValue;
               });
-            }),
-           );
-        } else {
-          return const SizedBox.shrink();
-        }
-      }
+            },
+            isDense: true,
+            dropdownColor: theme.colorScheme.surface,
+          ),
+        ),
+      ),
     );
   }
 
@@ -327,8 +392,8 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
       leading: Icon(Icons.calendar_today_outlined, color: theme.hintColor),
       title: Text(
         _selectedDate != null
-        ? DateFormat('yyyy년 MM월 dd일').format(_selectedDate!)
-        : '날짜를 선택해주세요.',
+            ? DateFormat('yyyy년 MM월 dd일').format(_selectedDate!)
+            : '날짜를 선택해주세요.',
         style: theme.textTheme.bodySmall,
       ),
       trailing: const Icon(Icons.arrow_drop_down),
@@ -346,7 +411,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
       controller: _contentController,
       decoration: const InputDecoration(
         hintText: '내용을 작성해주세요.',
-        border: InputBorder.none, 
+        border: InputBorder.none,
       ),
       maxLines: 5,
       validator: (value) {

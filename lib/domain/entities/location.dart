@@ -9,15 +9,15 @@ class Location {
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
-      id: json['id'],
-      locationName: json['location_name'],
+      id: json['locationId'],
+      locationName: json['locationName'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'location_name': locationName,
+      'locationId': id,
+      'locationName': locationName,
     };
   }
 

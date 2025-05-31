@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware{
   void _loadData() {
     final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
     setState(() {
-      _fetchBoardFuture = boardViewModel.fetchBoards(category: widget.lostCategory);
+      _fetchBoardFuture = boardViewModel.fetchCategoricalBoardItems(widget.lostCategory);
     });
   }
 
@@ -72,15 +72,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware{
         } else {
           return Consumer<BoardViewModel>(
           builder: (context, viewModel, child) {
-            if (viewModel.isLoading && viewModel.boards.isEmpty) {
+            if (viewModel.isLoadingBoardItems && viewModel.boards.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (viewModel.error != null && viewModel.boards.isEmpty) {
-               return Center(child: Text(viewModel.error!));
+            if (viewModel.boardError != null && viewModel.boards.isEmpty) {
+               return Center(child: Text(viewModel.boardError!));
             }
             if (viewModel.boards.isNotEmpty) {
               return SingleChildScrollView(
-                child: BoardListWidget(boards: viewModel.boards)
+                child: BoardListWidget(boardItems: viewModel.boards)
               );
             } else {
               return const Center(child: Text('게시글이 없습니다'));

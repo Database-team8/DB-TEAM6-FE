@@ -1,34 +1,65 @@
-import 'package:ajoufinder/domain/entities/board.dart';
+import 'package:ajoufinder/domain/entities/board_item.dart';
 import 'package:ajoufinder/ui/shared/widgets/board_view_widget.dart';
+import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class BoardListWidget extends StatelessWidget {
-  final List<Board> boards;
-  const BoardListWidget({super.key, required this.boards});
+  final List<BoardItem> boardItems;
+  const BoardListWidget({super.key, required this.boardItems});
 
   @override
   Widget build(BuildContext context) {
-    if (boards.isEmpty) {
+    if (boardItems.isEmpty) {
       return const Center(child: Text('게시글이 없습니다'),);
     } else {
       return ListView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
-        itemCount: boards.length,
-        itemBuilder: (context, index) => _BoardCard(board: boards[index]),
+        itemCount: boardItems.length,
+        itemBuilder: (context, index) => _BoardCard(boardItem: boardItems[index]),
       );
     }
   }
 }
 
 class _BoardCard extends StatelessWidget {
-  final Board board;
+  final BoardItem boardItem;
 
   const _BoardCard({
-    required this.board,
+    required this.boardItem,
   });
+  
+  Future<void> _navigateToBoardDetail(BuildContext context) async {
+    final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      await boardViewModel.fetchBoardDetails(boardItem.id);
+      if (navigator.mounted) {
+        navigator.push(
+          MaterialPageRoute(
+            builder: (context) => Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: BoardViewWidget(),
+                  ),
+                ),
+          ),
+        );
+      }
+    } catch (e) {
+      final errorMessage = boardViewModel.boardError ?? e.toString();
+      if (navigator.mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+      print('_navigateToBoardDetail 오류: $errorMessage');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,31 +83,19 @@ class _BoardCard extends StatelessWidget {
         ),
         margin: EdgeInsets.zero,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: BoardViewWidget(board: board,),
-                  ),
-                ),
-              ),
-            );
-          },
+          onTap: () => _navigateToBoardDetail(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _BoardImageArea(board: board, cardBg: cardBg, borderColor: borderColor),
+              _BoardImageArea(board: boardItem, cardBg: cardBg, borderColor: borderColor),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _BoardTitle(title: board.title),
+                    _BoardTitle(title: boardItem.title),
                     const SizedBox(height: 8),
-                    _BoardLocationRow(location: board.detailedLocation),
+                    _BoardLocationRow(location: boardItem.status),
                   ],
                 ),
               ),
@@ -89,7 +108,7 @@ class _BoardCard extends StatelessWidget {
 }
 
 class _BoardImageArea extends StatelessWidget {
-  final Board board;
+  final BoardItem board;
   final Color cardBg;
   final Color borderColor;
 
@@ -103,7 +122,7 @@ class _BoardImageArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        _BoardImage(imageUrl: board.image, cardBg: cardBg, borderColor: borderColor),
+        _BoardImage(imageUrl: board.imageUrl, cardBg: cardBg, borderColor: borderColor),
         Positioned(
           top: 10,
           right: 10,

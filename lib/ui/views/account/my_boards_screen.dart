@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class MyBoardsScreen extends StatefulWidget{
-  const MyBoardsScreen({Key? key}) : super(key : key);
+  const MyBoardsScreen({super.key});
 
   @override
   State<MyBoardsScreen> createState() => _MyBoardsScreenState();
@@ -18,11 +18,8 @@ class _MyBoardsScreenState extends State<MyBoardsScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
-      if (authViewModel.userUid != null) {
-        boardViewModel.fetchBoards(uuid: authViewModel.userUid);
-      }
+      boardViewModel.fetchMyBoardItems();
     });
   }
 
@@ -53,16 +50,16 @@ class _MyBoardsScreenState extends State<MyBoardsScreen> {
   }
 
   Widget _buildBodyContent({required BoardViewModel boardViewModel,}) {
-    return boardViewModel.isLoading 
+    return boardViewModel.isLoadingBoardItems 
     ? Center(child: CircularProgressIndicator())
     : (
-      boardViewModel.error != null
-      ? Center(child: Text(boardViewModel.error!))
+      boardViewModel.boardError != null
+      ? Center(child: Text(boardViewModel.boardError!))
       : (
         boardViewModel.boards.isEmpty 
         ? Center(child: Text('작성한 게시글이 없습니다.'))
         : SingleChildScrollView(
-          child: BoardListWidget(boards: boardViewModel.boards)
+          child: BoardListWidget(boardItems: boardViewModel.boards)
         )
       )
     );

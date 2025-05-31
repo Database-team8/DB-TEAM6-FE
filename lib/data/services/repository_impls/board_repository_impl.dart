@@ -1,30 +1,21 @@
+import 'dart:convert';
+import 'package:ajoufinder/const/network.dart';
+import 'package:ajoufinder/data/dto/board/boards/boards_request.dart';
+import 'package:ajoufinder/data/dto/board/boards/boards_response.dart';
+import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_request.dart';
+import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_response.dart';
+import 'package:ajoufinder/data/dto/itemtype/itemtypes/itemtypes_response.dart';
 import 'package:ajoufinder/domain/entities/board.dart';
-import 'package:ajoufinder/domain/entities/item_type.dart';
+import 'package:ajoufinder/domain/entities/board_item.dart';
+import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
 import 'package:ajoufinder/domain/repository/board_repository.dart';
+import 'package:http/http.dart' as http;
 
 class BoardRepositoryImpl extends BoardRepository{
+  final http.Client _client;
+  final CookieService _cookieService;
 
-  @override
-  Future<List<Board>> getAllBoardsByUserId(int userId) async {
-    await Future.delayed(Duration(milliseconds: 500));
-    return [
-      Board(
-        id: 1,
-        title: '첫 번째 게시글',
-        userId: userId,
-        locationId: 1,
-        detailedLocation: '도곡1동',
-        description: '첫 번째 게시글 설명',
-        relatedDate: DateTime.now(),
-        image: null,
-        status: 'active',
-        category: 'general',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        itemType: 'type1',
-      )
-    ];
-  }
+  BoardRepositoryImpl(this._client, this._cookieService);
 
   @override
   Future<void> addNewBoard(Board board) async {
@@ -32,17 +23,37 @@ class BoardRepositoryImpl extends BoardRepository{
   }
 
   @override
-  Future<List<int>> getAllDepartmentIds() async {
-    throw UnimplementedError();
-  }
+  Future<ItemtypesResponse> getAllItemTypes() async {
+    final url = Uri.parse('$baseUrl/itemtypes');
 
-  @override
-  Future<List<ItemType>> getAllItemTypes() async {
-    await Future.delayed(Duration(milliseconds: 500));
-    return [
-      ItemType(id: 1, itemType: '지갑'),
-      ItemType(id: 2, itemType: '악세사리'),
-    ];
+    try {
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          // 이 API는 별도의 인증 헤더가 필요 없을 수 있습니다. (API 명세에 따라 확인)
+          // 만약 JSESSIONID 쿠키 등이 필요하다면, http.Client가 자동으로 보내거나
+          // 인터셉터 등을 통해 추가해야 합니다.
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if  (response.statusCode >= 200 && response.statusCode < 300) {
+        return ItemtypesResponse.fromJson(responseBody);
+      } else {
+        print('아이템 종류 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        // API 응답 구조에 따라 오류 메시지를 포함한 DTO를 반환하거나 예외를 발생시킬 수 있습니다.
+        // 여기서는 예외를 발생시킵니다.
+        throw Exception('아이템 종류 조회 실패 (서버 오류 ${response.statusCode})');
+      } 
+    } on http.ClientException catch (e) {
+      print('아이템 종류 API 네트워크 오류 발생: $e');
+      throw Exception('아이템 종류 조회 중 네트워크 연결에 실패했습니다.');
+    } catch (e) {
+      print('아이템 종류 API 응답 처리 중 예외 발생: $e');
+      throw Exception('아이템 종류 응답 처리 중 오류가 발생했습니다.');
+    }
   }
 
   @override
@@ -56,174 +67,132 @@ class BoardRepositoryImpl extends BoardRepository{
   }
 
   @override
-  Future<List<Board>> getAllBoardsByCategory(String category) async {
+  Future<List<BoardItem>> getAllBoardItemsByCategory(String category) async {
     await Future.delayed(Duration(milliseconds: 500));
-    return [
-      Board(
-        id: 1,
-        title: '첫 번째 게시글',
-        userId: 101,
-        locationId: 1,
-        detailedLocation: '도곡1동',
-        description: '첫 번째 게시글 설명',
-        relatedDate: DateTime.now(),
-        image: null,
-        status: 'active',
-        category: 'general',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        itemType: 'type1',
-      ),
-      Board(
-        id: 2,
-        title: '두 번째 게시글',
-        userId: 102,
-        locationId: 2,
-        detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 3,
-      title: '세 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 4,
-      title: '네 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 5,
-      title: '다섯 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 6,
-      title: '여섯 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 7,
-      title: '일곱 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 8,
-      title: '여덟 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 9,
-      title: '아홉 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 10,
-      title: '열 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ),
-    Board(
-      id: 11,
-      title: '열한 번째 게시글',
-      userId: 102,
-      locationId: 2,
-      detailedLocation: '서초동',
-      description: '두 번째 게시글 설명',
-      relatedDate: DateTime.now(),
-      image: null,
-      status: 'active',
-      category: 'general',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      itemType: 'type2',
-    ), // 추가 게시글 가능
-  ];
+    return [];
+  }
+
+  @override
+  Future<BoardsResponse> getFoundBoards(BoardsRequest request) async {
+    final Map<String, dynamic> queryParams = {};
+
+    if (request.page != null) {
+      queryParams['page'] = request.page.toString();
+    }
+    if (request.size != null) {
+      queryParams['size'] = request.size.toString();
+    }
+
+    final url = Uri.parse('$baseUrl/boards/found').replace(
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    try {
+      final cookie = await _cookieService.getCookie(cookieName);
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Cookie' : '$cookieName=$cookie',
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return BoardsResponse.fromJson(responseBody);
+      } else {
+        print('습득 게시글 목록 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('습득 게시글 목록 조회 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('습득 게시글 목록 API 네트워크 오류 발생: $e');
+      throw Exception('습득 게시글 목록 조회 중 네트워크 연결에 실패했습니다.');
+    } on FormatException catch (e) {
+      print('습득 게시글 목록 API 응답 형식 오류: $e');
+      throw Exception('습득 게시글 목록 응답 형식이 잘못되었습니다.');
+    } catch (e) {
+      print('습득 게시글 목록 API 응답 처리 중 예외 발생: $e');
+      throw Exception('습득 게시글 목록 응답 처리 중 오류가 발생했습니다.');
+    } 
+  }
+  
+  @override
+  Future<BoardsResponse> getLostBoards(BoardsRequest request) async {
+    final Map<String, dynamic> queryParams = {};
+
+    if (request.page != null) {
+      queryParams['page'] = request.page.toString();
+    }
+    if (request.size != null) {
+      queryParams['size'] = request.size.toString();
+    }
+
+    final url = Uri.parse('$baseUrl/boards/lost').replace(
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    try {
+      final cookie = await _cookieService.getCookie(cookieName);
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Cookie' : '$cookieName=$cookie',
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return BoardsResponse.fromJson(responseBody);
+      } else {
+        print('습득 게시글 목록 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('습득 게시글 목록 조회 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('습득 게시글 목록 API 네트워크 오류 발생: $e');
+      throw Exception('습득 게시글 목록 조회 중 네트워크 연결에 실패했습니다.');
+    } on FormatException catch (e) {
+      print('습득 게시글 목록 API 응답 형식 오류: $e');
+      throw Exception('습득 게시글 목록 응답 형식이 잘못되었습니다.');
+    } catch (e) {
+      print('습득 게시글 목록 API 응답 처리 중 예외 발생: $e');
+      throw Exception('습득 게시글 목록 응답 처리 중 오류가 발생했습니다.');
+    }
+  }
+  
+  @override
+  Future<DetailedBoardResponse> getBoardById(DetailedBoardRequest request) async {
+    final url = Uri.parse('$baseUrl/boards/${request.boardId}');
+    
+    try {
+      final cookie = await _cookieService.getCookie(cookieName);
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Cookie' : '$cookieName=$cookie',
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return DetailedBoardResponse.fromJson(responseBody);
+      } else {
+        print('게시글 상세 조회 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('게시글 상세 조회 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('게시글 상세 조회 API 네트워크 오류 발생: $e');
+      throw Exception('게시글 상세 조회 중 네트워크 연결에 실패했습니다.');
+    } on FormatException catch (e) {
+      print('게시글 상세 조회 API 응답 형식 오류: $e');
+      throw Exception('게시글 상세 조회 응답 형식이 잘못되었습니다.');
+    } catch (e) {
+      print('게시글 상세 조회 API 응답 처리 중 예외 발생: $e');
+      throw Exception('게시글 상세 조회 응답 처리 중 오류가 발생했습니다.');
+    }
   }
 }

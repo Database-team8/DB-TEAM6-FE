@@ -1,5 +1,5 @@
-import 'package:ajoufinder/data/dto/login/login_request.dart';
-import 'package:ajoufinder/data/dto/login/login_response.dart';
+import 'package:ajoufinder/data/dto/auth/login/login_request.dart';
+import 'package:ajoufinder/data/dto/auth/login/login_response.dart';
 import 'package:ajoufinder/domain/repository/auth_repository.dart';
 
 class LoginUsecase {

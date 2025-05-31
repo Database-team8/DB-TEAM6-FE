@@ -1,5 +1,6 @@
 import 'package:ajoufinder/ui/shared/widgets/keywords_setting_screen.dart';
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
+import 'package:ajoufinder/ui/views/account/change_password_screen.dart';
 import 'package:ajoufinder/ui/views/account/my_boards_screen.dart';
 import 'package:ajoufinder/ui/views/account/my_bookmarked_boards_screen.dart';
 import 'package:ajoufinder/ui/views/account/my_comments_screen.dart';
@@ -42,7 +43,6 @@ class _AccountScreenState extends State<AccountScreen> {
     final authViewModel = Provider.of<AuthViewModel>(context);
     final currentUser = authViewModel.currentUser!;
 
-    String formattedJoinDate = DateFormat('yyyy-MM-dd').format(currentUser.joinDate);
     final theme = Theme.of(context);
 
     return Container(
@@ -119,24 +119,6 @@ class _AccountScreenState extends State<AccountScreen> {
                       maxLines: 2,
                     ),
                     SizedBox(height: 4),
-                    Text(
-                      // 이메일을 기본으로 표시하고, 전화번호가 있으면 같이 표시
-                      currentUser.phoneNumber != null && currentUser.phoneNumber!.isNotEmpty
-                          ? '${currentUser.email}\n${currentUser.phoneNumber}'
-                          : currentUser.email, // 이메일 / 전화번호
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '가입일 : $formattedJoinDate', // 가입일
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -181,15 +163,23 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ),
           _buildClickableListItem(
-            title: '아이디',
-            trailingText: currentUser.email, 
+            title: '닉네임',
+            trailingText: currentUser.nickname, 
             context: context
           ),
           _buildClickableListItem(
             title: '비밀번호 변경',
-            onTap: () {
-              // TODO: 비밀번호 변경 기능 구현
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 400),
+                    child: ChangePasswordScreen()
+                  ),
+                )
+              )
+            ),
             context: context
           ),
           _buildClickableListItem(

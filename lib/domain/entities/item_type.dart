@@ -9,15 +9,15 @@ class ItemType {
 
   factory ItemType.fromJson(Map<String, dynamic> json) {
     return ItemType(
-      id: json['id'],
-      itemType: json['item_type'],
+      id: json['itemTypeId'],
+      itemType: json['itemType'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'item_type': itemType,
+      'itemTypeId': id,
+      'itemType': itemType,
     };
   }
 

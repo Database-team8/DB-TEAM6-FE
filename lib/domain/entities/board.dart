@@ -1,69 +1,63 @@
+import 'package:ajoufinder/domain/entities/item_type.dart';
+import 'package:ajoufinder/domain/entities/location.dart';
+import 'package:ajoufinder/domain/entities/user.dart';
+
 class Board {
-  final int id; 
+  final int id;
   final String title;
-  final int userId; 
-  final int? locationId; 
-  final String? detailedLocation;
-  final String description; 
-  final DateTime? relatedDate;
-  final String? image; 
-  final String status; 
-  final String category; 
+  final String description;
+  final String? image;
+  final Location location;
+  final User user;
+  final String status;
+  final String category;
+  final ItemType itemType;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? itemType; 
 
   Board({
     required this.id,
     required this.title,
-    required this.userId,
-    this.locationId,
-    this.detailedLocation,
     required this.description,
-    this.relatedDate,
     this.image,
+    required this.location,
+    required this.user,
     required this.status,
     required this.category,
+    required this.itemType,
     required this.createdAt,
     required this.updatedAt,
-    this.itemType,
   });
 
   factory Board.fromJson(Map<String, dynamic> json) {
     return Board(
-      id: json['id'],
-      title: json['title'],
-      userId: json['user_id'],
-      locationId: json['location_id'],
-      detailedLocation: json['detailed_location'],
-      description: json['description'],
-      relatedDate: json['related_date'] != null
-          ? DateTime.parse(json['related_date'])
-          : null,
-      image: json['image'],
-      status: json['status'],
-      category: json['category'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      itemType: json['item_type'],
+      id: json['board_id'] as int,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      image: json['image'] as String?,
+      location: Location.fromJson(json['location'] as Map<String, dynamic>),
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
+      status: json['status'] as String,
+      category: json['category'] as String,
+      itemType: ItemType.fromJson(json['item_type'] as Map<String, dynamic>),
+      createdAt: json['created_at'] as DateTime,
+      updatedAt: json['updated_at'] as DateTime,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'board_id': id,
       'title': title,
-      'user_id': userId,
-      'location_id': locationId,
-      'detailed_location': detailedLocation,
       'description': description,
-      'related_date': relatedDate?.toIso8601String(),
       'image': image,
+      'location': location.toJson(),
+      'user': user.toJson(),
       'status': status,
       'category': category,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      'item_type': itemType,
+      'item_type': itemType.toJson(),
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }
 }

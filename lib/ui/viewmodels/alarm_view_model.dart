@@ -1,10 +1,12 @@
 import 'package:ajoufinder/domain/repository/alarm_repository.dart';
 import 'package:ajoufinder/domain/entities/alarm.dart';
-import 'package:ajoufinder/injection_container.dart';
+import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
 import 'package:flutter/material.dart';
 
 class AlarmViewModel extends ChangeNotifier{
-  final _repository = getIt<AlarmRepository>();
+  final MyAlarmsUsecase _myAlarmsUsecase;
+
+  AlarmViewModel(this._myAlarmsUsecase);
 
   List<Alarm> _alarms = [];
   bool _isLoading = false;
@@ -26,12 +28,12 @@ class AlarmViewModel extends ChangeNotifier{
 
   bool hasNewAlarms() => _alarms.any((alarm) => !alarm.isRead);
 
-  Future<void> fetchAlarms({required int uuid}) async {
+  Future<void> fetchMyAlarms() async {
     _clear();
     _setLoading(true);
 
     try {
-      _alarms = await _repository.getAllAlarmsByUserId(uuid);
+      _alarms = await _myAlarmsUsecase.execute();
       _error = null;
     } catch (e) {
       _error = '알림을 불러오는 중 오류가 발생했습니다.';
@@ -47,7 +49,7 @@ class AlarmViewModel extends ChangeNotifier{
     if (index != -1) {
       if (!_alarms[index].isRead) {
         try {
-          await _repository.markAsRead(alarmId);
+          //await _repository.markAsRead(alarmId);
           _alarms[index].isRead = true;
       } catch (e) {
         _error = '읽음 표시 중 문제가 발생했습니다.';

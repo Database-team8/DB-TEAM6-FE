@@ -1,34 +1,41 @@
 import 'package:ajoufinder/const/network.dart';
-import 'package:ajoufinder/data/dto/logout/logout_response.dart';
-import 'package:ajoufinder/data/dto/sign_up/sign_up_request.dart';
+import 'package:ajoufinder/data/dto/auth/logout/logout_response.dart';
+import 'package:ajoufinder/data/dto/user/signup/signup_request.dart';
 import 'package:ajoufinder/domain/entities/user.dart';
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
-import 'package:ajoufinder/domain/repository/user_repository.dart';
-import 'package:ajoufinder/domain/usecases/login_usecase.dart';
-import 'package:ajoufinder/domain/usecases/logout_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
+import 'package:ajoufinder/domain/usecases/auth/login_usecase.dart';
+import 'package:ajoufinder/domain/usecases/auth/logout_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/profile_usecase.dart';
 import 'package:flutter/material.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  final UserRepository _userRepository;
   final CookieService _cookieService;
   final LogoutUsecase _logoutUsecase;
   final LoginUsecase _loginUsecase;
+  final ChangePasswordUsecase _changePasswordUsecase;
+  final ProfileUsecase _profileUsecase;
 
   bool _isLoggedIn = false;
   bool _isLoading = false;
-  int? _userUid;
+  
   User? _currentUser;
   String? _authErrorMessage;
   //테스트용 삭제할 것.
-  User testUser = User(id: 1, name: '장한', nickname: '닉네임', email: 'egnever4434@naver.com', password: '1234', role: 'common', updatedAt: DateTime(2002, 10, 12, 23, 59, 59, 99, 0), joinDate: DateTime(2002, 10, 12, 23, 59, 59, 99, 0), phoneNumber: "010-5560-8529", profileImage: "https://siape.veta.naver.com/fxclick?eu=EU10043565&calp=-&oj=cQgn6aire5OCkDs5f7%2BPJ4O3qbsJzHyS0J7a3X2KOumz1M2JFLhyvOvzYS65R9Xj3Uyod%2FLw9f3rv0E7yis2wh8iAc05TbugzxX%2F41dsXFH5WgZkric4e%2FVJwo5hKV6wctRzZMZGLy7qAnSQcXmU%2Fev47hlmG9S2wq%2BDrzLexRocWl11sYqmqvwcBMOjcOaeQ5sJneYKbTkYZfOumM9ijpPqnfPpxiGrWcs4F74%2BEyPgy%2BoloYhsMxvwkG6KJVxRjvkZRxz8a72A9FlU06lTryrSgAhsix95uXbdwcWSqXpgkKVnhxT4LG6zPv6Fpkja9VUn3aD3j4thSAlb2ZdUtI8t97sD5Cf8V%2BfrBROaCPKqr%2FQPXbJd%2FN%2F4hBpY8cGM&ac=9120481&src=7597723&br=4735566&evtcd=P901&x_ti=1505&tb=&oid=&sid1=&sid2=&rk=Ke2G5X5Z-FTEs-vCLRXToA&eltts=tJM52nE%2BLRD%2FYUZwXtZdrw%3D%3D&brs=Y&");
+  User testUser = User(name: '장한', nickname: '닉네임', phoneNumber: "010-5560-8529", profileImage: "https://siape.veta.naver.com/fxclick?eu=EU10043565&calp=-&oj=cQgn6aire5OCkDs5f7%2BPJ4O3qbsJzHyS0J7a3X2KOumz1M2JFLhyvOvzYS65R9Xj3Uyod%2FLw9f3rv0E7yis2wh8iAc05TbugzxX%2F41dsXFH5WgZkric4e%2FVJwo5hKV6wctRzZMZGLy7qAnSQcXmU%2Fev47hlmG9S2wq%2BDrzLexRocWl11sYqmqvwcBMOjcOaeQ5sJneYKbTkYZfOumM9ijpPqnfPpxiGrWcs4F74%2BEyPgy%2BoloYhsMxvwkG6KJVxRjvkZRxz8a72A9FlU06lTryrSgAhsix95uXbdwcWSqXpgkKVnhxT4LG6zPv6Fpkja9VUn3aD3j4thSAlb2ZdUtI8t97sD5Cf8V%2BfrBROaCPKqr%2FQPXbJd%2FN%2F4hBpY8cGM&ac=9120481&src=7597723&br=4735566&evtcd=P901&x_ti=1505&tb=&oid=&sid1=&sid2=&rk=Ke2G5X5Z-FTEs-vCLRXToA&eltts=tJM52nE%2BLRD%2FYUZwXtZdrw%3D%3D&brs=Y&");
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
-  int? get userUid => _userUid;
+  
   User? get currentUser => _currentUser;
   String? get authErrorMessage => _authErrorMessage;
 
-  AuthViewModel(this._userRepository, this._cookieService, this._logoutUsecase, this._loginUsecase) {
+  AuthViewModel(
+    this._cookieService, 
+    this._logoutUsecase, 
+    this._loginUsecase, 
+    this._changePasswordUsecase, 
+    this._profileUsecase) {
     checkLoginStatusOnStartup();
   }
 
@@ -46,20 +53,20 @@ class AuthViewModel extends ChangeNotifier {
   }) {
     _isLoggedIn = isLoggedIn;
     _currentUser = user;
-    _userUid = user?.id;
+    
     _authErrorMessage = errorMessage;
     notifyListeners();
   }
 
-  Future<bool> _fetchAndSetUser(String cookie) async {
+  Future<bool> _fetchAndSetUser() async {
     try {
-      final User? fetchedUser = await _userRepository.findByAccessToken(cookie);
+      final User? fetchedUser = await _profileUsecase.execute();
       if (fetchedUser != null) {
         _updateAuthState(isLoggedIn: true, user: fetchedUser);
-        print('AuthViewModel: 사용자 정보 로드 성공 - ID: ${fetchedUser.id}');
+        print('AuthViewModel: 사용자 정보 로드 성공 - ID: ${fetchedUser.name}');
         return true;
       } else {
-        print('AuthViewModel: 사용자를 찾을 수 없습니다. ID: $cookie');
+        print('AuthViewModel: 사용자를 찾을 수 없습니다.');
         // 사용자를 못 찾으면 로그아웃 상태로 처리
         await _clearAuthDataAndNotify(errorMessage: '사용자 정보를 찾을 수 없습니다.');
         return false;
@@ -84,7 +91,7 @@ class AuthViewModel extends ChangeNotifier {
       final accessToken = await _cookieService.getCookie(cookieName);
 
       if (accessToken != null && accessToken.isNotEmpty) {
-        User? user = await _userRepository.findByAccessToken(accessToken);
+        User? user = await _profileUsecase.execute();
 
         if (user != null) {
           _updateAuthState(isLoggedIn: true, user: user);
@@ -119,7 +126,7 @@ class AuthViewModel extends ChangeNotifier {
         if (cookie == null) {
           await _clearAuthDataAndNotify(errorMessage: '잘못된 사용자 ID 형식입니다.');
         } else {
-          await _fetchAndSetUser(cookie);
+          await _fetchAndSetUser();
           print('AuthViewModel: 로그인 성공');
         }
       } else {
@@ -137,13 +144,13 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading(true);
-    String? accessToken;
+    String? cookie;
 
     try {
-      accessToken = await _cookieService.getCookie(cookieName);
+      cookie = await _cookieService.getCookie(cookieName);
 
-      if (accessToken != null && accessToken.isNotEmpty) {
-        final LogoutResponse response = await _logoutUsecase.execute(accessToken);
+      if (cookie != null && cookie.isNotEmpty) {
+        final LogoutResponse response = await _logoutUsecase.execute(cookie);
 
         if (response.isSuccess) {
           print("AuthViewModel: 서버 로그아웃 성공 - ${response.message}");
@@ -159,7 +166,7 @@ class AuthViewModel extends ChangeNotifier {
       await _cookieService.deleteCookie(cookieName);
 
       _isLoggedIn = false;
-      _userUid = null;
+      
       _currentUser = null;
       _setLoading(false);
     }
@@ -169,11 +176,42 @@ class AuthViewModel extends ChangeNotifier {
   void testlogin() {
     _isLoggedIn = !_isLoggedIn;
     _currentUser = testUser;
-    _userUid = testUser.id;
+    
     notifyListeners(); 
   }
 
   Future<void> signUp({required String email, required String password, required String name, required String nickname, required String? phone, required String? description, required BuildContext context}) async {
     
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _setLoading(true);
+    _authErrorMessage = null;
+
+    bool success = false;
+
+    try {
+      final response = await _changePasswordUsecase.execute(currentPassword: currentPassword, newPassword: newPassword);
+
+      if (response.isSuccess) {
+        print('AuthViewModel: 비밀번호 변경 성공');
+        success = true;
+      } else {
+        _authErrorMessage = response.message;
+        print('AuthViewModel: 비밀번호 변경 실패 - ${response.message} (코드: ${response.code})');
+      }
+    } on ArgumentError catch (e) {
+      _authErrorMessage = e.message;
+      print('AuthViewModel: 비밀번호 변경 입력 오류 - ${e.message}');
+    } catch (e) {
+      _authErrorMessage = '비밀번호 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      print('AuthViewModel: 비밀번호 변경 중 예외 발생 - ${e.toString()}');
+    } finally {
+      _setLoading(false);
+    }
+    return success;
   }
 }
