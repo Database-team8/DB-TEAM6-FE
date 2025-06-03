@@ -88,24 +88,18 @@ class AuthRepositoryImpl extends AuthRepository{
     final url = Uri.parse('$baseUrl/user/profile');
 
     try {
-      // GET 요청 시 브라우저가 자동으로 JSESSIONID 쿠키를 포함하여 전송합니다.
-      // Flutter 웹에서 http.Client는 내부적으로 브라우저의 fetch API를 사용하므로,
-      // withCredentials와 유사하게 동작하여 쿠키가 전송될 가능성이 높습니다.
-      // (서버의 CORS 설정에서 Access-Control-Allow-Credentials: true 필요)
-      String? sessionId = await _cookieService.getCookie(cookieName);
+      final sessionId = await _cookieService.getCookie(cookieName);
       final response = await _client.get(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie': 'JSESSIONID=$sessionId',
-          // 이 API는 JSESSIONID 쿠키를 통해 인증될 것으로 예상됩니다.
-          // 브라우저는 쿠키를 자동으로 전송하거나, http.Client 설정 또는 인터셉터에서
+          'Cookie': '$cookieName=$sessionId',
         },
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final responseBody = json.decode(response.body);
-
+        
         if (responseBody['isSuccess'] == true && responseBody['result'] != null) {
           return ProfileResponse.fromJson(responseBody);
         } else {
@@ -133,12 +127,12 @@ class AuthRepositoryImpl extends AuthRepository{
     final url = Uri.parse('$baseUrl/user/password');
 
     try {
-      String? sessionId = await _cookieService.getCookie(cookieName);
+      final sessionId = await _cookieService.getCookie(cookieName);
       final response = await _client.put(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie': 'JSESSIONID=$sessionId',
+          'Cookie': '$cookieName=$sessionId',
           // 이 API는 JSESSIONID 쿠키를 통해 인증될 것으로 예상됩니다.
           // 브라우저는 쿠키를 자동으로 전송하거나, http.Client 설정 또는 인터셉터에서
         },

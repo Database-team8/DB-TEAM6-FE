@@ -23,8 +23,6 @@ class AuthViewModel extends ChangeNotifier {
   
   User? _currentUser;
   String? _authErrorMessage;
-  //테스트용 삭제할 것.
-  User testUser = User(name: '장한', nickname: '닉네임', phoneNumber: "010-5560-8529", profileImage: "https://siape.veta.naver.com/fxclick?eu=EU10043565&calp=-&oj=cQgn6aire5OCkDs5f7%2BPJ4O3qbsJzHyS0J7a3X2KOumz1M2JFLhyvOvzYS65R9Xj3Uyod%2FLw9f3rv0E7yis2wh8iAc05TbugzxX%2F41dsXFH5WgZkric4e%2FVJwo5hKV6wctRzZMZGLy7qAnSQcXmU%2Fev47hlmG9S2wq%2BDrzLexRocWl11sYqmqvwcBMOjcOaeQ5sJneYKbTkYZfOumM9ijpPqnfPpxiGrWcs4F74%2BEyPgy%2BoloYhsMxvwkG6KJVxRjvkZRxz8a72A9FlU06lTryrSgAhsix95uXbdwcWSqXpgkKVnhxT4LG6zPv6Fpkja9VUn3aD3j4thSAlb2ZdUtI8t97sD5Cf8V%2BfrBROaCPKqr%2FQPXbJd%2FN%2F4hBpY8cGM&ac=9120481&src=7597723&br=4735566&evtcd=P901&x_ti=1505&tb=&oid=&sid1=&sid2=&rk=Ke2G5X5Z-FTEs-vCLRXToA&eltts=tJM52nE%2BLRD%2FYUZwXtZdrw%3D%3D&brs=Y&");
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
@@ -64,7 +62,11 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<bool> _fetchAndSetUser() async {
     try {
-      final User? fetchedUser = await _profileUsecase.execute();
+      final fetchedUser = await _profileUsecase.execute();
+      _updateAuthState(isLoggedIn: true, user: fetchedUser);
+      print('AuthViewModel: 사용자 정보 로드 성공 - ID: ${fetchedUser.name}');
+      return true;
+      /**
       if (fetchedUser != null) {
         _updateAuthState(isLoggedIn: true, user: fetchedUser);
         print('AuthViewModel: 사용자 정보 로드 성공 - ID: ${fetchedUser.name}');
@@ -74,7 +76,7 @@ class AuthViewModel extends ChangeNotifier {
         // 사용자를 못 찾으면 로그아웃 상태로 처리
         await _clearAuthDataAndNotify(errorMessage: '사용자 정보를 찾을 수 없습니다.');
         return false;
-      }
+      }*/
     } catch (e) {
       print('AuthViewModel: 사용자 정보 로드 중 오류: $e');
       await _clearAuthDataAndNotify(errorMessage: '사용자 정보 로드 중 오류가 발생했습니다.');
@@ -124,7 +126,7 @@ class AuthViewModel extends ChangeNotifier {
 
       if (response.isSuccess) {
         final sessionId = response.result;
-        await _cookieService.setCookie(cookieName, sessionId, maxAgeInSeconds: 60 * 60 * 5);
+        await _cookieService.setCookie(cookieName, sessionId, maxAgeInSeconds: 60 * 60 * 24 * 7);
         final cookie = await _cookieService.getCookie(cookieName);
 
         // 쿠키 활용하는 구조로 바꾸기
@@ -184,13 +186,6 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  //테스트용. 삭제할 것.
-  void testlogin() {
-    _isLoggedIn = !_isLoggedIn;
-    _currentUser = testUser;
-    
-    notifyListeners(); 
-  }
 
   Future<bool> signUp({
     required String name, 

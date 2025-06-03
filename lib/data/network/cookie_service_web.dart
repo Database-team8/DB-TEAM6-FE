@@ -35,13 +35,13 @@ class CookieServiceWeb extends CookieService{
   @override
   Future<void> setCookie(String name, String value, {int? maxAgeInSeconds, String path = '/'}) async {
     if (kIsWeb) {
-      var cookieString = '${Uri.encodeComponent(name)}=${Uri.encodeComponent(value)}';
-      cookieString += '; Path=$path';
-
-      if (maxAgeInSeconds != null) {
-        cookieString += '; Max-Age=$maxAgeInSeconds';
-      }
-      web.window.document.cookie = cookieString;
+      final cookieParts = [
+        '${Uri.encodeComponent(name)}=${Uri.encodeComponent(value)}',
+        'Path=$path',
+        if (maxAgeInSeconds != null) 'Max-Age=$maxAgeInSeconds',
+        'SameSite=Lax',
+      ];
+      web.window.document.cookie = cookieParts.join('; ');
     }
   }
 }

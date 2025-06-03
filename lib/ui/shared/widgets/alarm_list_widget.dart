@@ -73,7 +73,7 @@ class _AlarmCardState extends State<_AlarmCard> {
         }
       } else {
         // 이미 확장된 상태에서 클릭 시 URL로 이동
-        _launchURL(widget.alarm.relatedUrl);
+        _launchURL(widget.alarm.url);
       }
     });
   }
@@ -174,7 +174,7 @@ class _AlarmCardState extends State<_AlarmCard> {
                 overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
               ),
               // 확장 시 URL 이동 안내 (선택적)
-              if (_isExpanded && widget.alarm.relatedUrl.isNotEmpty)
+              if (_isExpanded && widget.alarm.url.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: Align(

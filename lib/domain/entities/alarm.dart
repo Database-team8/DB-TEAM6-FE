@@ -1,39 +1,43 @@
 class Alarm {
   final int id;
-  final int userId;
   final String content;
-  final String relatedUrl;
+  final String relatedContent;
+  final String url;
   bool isRead;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   Alarm({
     required this.id,
-    required this.userId,
     required this.content,
-    required this.relatedUrl,
+    required this.relatedContent,
+    required this.url,
     required this.isRead,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory Alarm.fromJson(Map<String, dynamic> json) {
     return Alarm(
-      id: json['id'],
-      userId: json['user_id'],
-      content: json['content'],
-      relatedUrl: json['related_url'],
-      isRead: json['is_read'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id'] as int,
+      content: json['content'] as String,
+      relatedContent: json['related_content'] as String,
+      url: json['url'] as String,
+      isRead: json['is_read'] as bool,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_id': userId,
       'content': content,
-      'related_url': relatedUrl,
+      'related_content': relatedContent,
+      'url': url,
       'is_read': isRead,
       'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 }
