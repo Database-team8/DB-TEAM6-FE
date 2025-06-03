@@ -11,10 +11,8 @@ import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
-import 'package:ajoufinder/ui/views/account/account_screen.dart';
-import 'package:ajoufinder/ui/views/home/home_screen.dart';
-import 'package:ajoufinder/ui/views/map/map_screen.dart';
 import 'package:ajoufinder/ui/views/alarms/alarm_screen.dart';
+import 'package:ajoufinder/ui/views/wrapper/screen_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -31,13 +29,6 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
   String? _selectedStatus;
 
   late Future<List<String>> _statusesFuture;
-
-  final _pages = [
-    HomeScreen(lostCategory: 'lost'),
-    HomeScreen(lostCategory: 'found'),
-    MapScreen(),
-    AccountScreen(),
-  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -129,10 +120,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                 )
                 : const SizedBox(),
       ),
-      body: IndexedStack(
-        index: navigatorBarViewModel.currentIndex,
-        children: _pages,
-      ),
+      body: ScreenWrapper(),
       bottomNavigationBar: BottomNavBar(onTap: _onItemTapped),
       backgroundColor: theme.colorScheme.surface,
       floatingActionButton:

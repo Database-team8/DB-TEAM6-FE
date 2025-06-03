@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ajoufinder/main.dart';
 import 'package:ajoufinder/ui/shared/widgets/board_list_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
@@ -15,21 +13,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware{
-  late Future<void> _fetchBoardFuture;
 
   @override
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    print('${DateTime.now()} - HomeScreen didUpdateWidget ${widget.lostCategory}');
     if (oldWidget.lostCategory != widget.lostCategory) {
       _loadData();
     }
   }
 
-  void _loadData() {
+  void _loadData() async {
     final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
-    setState(() {
-      _fetchBoardFuture = boardViewModel.fetchCategoricalBoardItems(widget.lostCategory);
-    });
+    await boardViewModel.fetchCategoricalBoardItems(widget.lostCategory);
   }
 
   @override
@@ -56,40 +52,27 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware{
   @override
   void initState() {
     super.initState();
-    _fetchBoardFuture = Completer<void>().future; 
     _loadData();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _fetchBoardFuture, 
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text(snapshot.error.toString()));
-        } else {
-          return Consumer<BoardViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoadingBoardItems && viewModel.boards.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (viewModel.boardError != null && viewModel.boards.isEmpty) {
-               return Center(child: Text(viewModel.boardError!));
-            }
-            if (viewModel.boards.isNotEmpty) {
-              return SingleChildScrollView(
-                child: BoardListWidget(boardItems: viewModel.boards)
-              );
-            } else {
-              return const Center(child: Text('게시글이 없습니다'));
-            }
-          },
-        );
-        } 
+    return Consumer<BoardViewModel>(
+    builder: (context, viewModel, _) {
+      if (viewModel.isLoadingBoardItems && viewModel.boards.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
       }
-    );
+      if (viewModel.boardError != null) {
+        return Center(child: Text(viewModel.boardError!));
+      }
+      if (viewModel.boards.isNotEmpty) {
+        return SingleChildScrollView(
+          child: BoardListWidget(boardItems: viewModel.boards)
+        );
+      }
+      return const Center(child: Text('게시글이 없습니다'));
+    },
+  );
   }
 }
 

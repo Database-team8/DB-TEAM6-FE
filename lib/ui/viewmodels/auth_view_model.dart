@@ -7,6 +7,7 @@ import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
 import 'package:ajoufinder/domain/usecases/auth/login_usecase.dart';
 import 'package:ajoufinder/domain/usecases/auth/logout_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/profile_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/sign_up_usecase.dart';
 import 'package:flutter/material.dart';
 
 class AuthViewModel extends ChangeNotifier {
@@ -15,6 +16,7 @@ class AuthViewModel extends ChangeNotifier {
   final LoginUsecase _loginUsecase;
   final ChangePasswordUsecase _changePasswordUsecase;
   final ProfileUsecase _profileUsecase;
+  final SignUpUsecase _signUpUsecase;
 
   bool _isLoggedIn = false;
   bool _isLoading = false;
@@ -35,7 +37,9 @@ class AuthViewModel extends ChangeNotifier {
     this._logoutUsecase, 
     this._loginUsecase, 
     this._changePasswordUsecase, 
-    this._profileUsecase) {
+    this._profileUsecase, 
+    this._signUpUsecase,
+    ) {
     checkLoginStatusOnStartup();
   }
 
@@ -110,9 +114,10 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> login({required String email, required String password}) async {
+  Future<bool> login({required String email, required String password}) async {
     _setLoading(true);
     _authErrorMessage = null;
+    bool success = false;
 
     try {
       final response = await _loginUsecase.execute(email: email, password: password);
@@ -128,18 +133,25 @@ class AuthViewModel extends ChangeNotifier {
         } else {
           await _fetchAndSetUser();
           print('AuthViewModel: 로그인 성공');
+          success = true;
         }
       } else {
         _clearAuthDataAndNotify(errorMessage:  response.message);
         print('AuthViewModel: 로그인 실패 - ${response.message} (코드: ${response.code})');
+        success = false;
       }
     } on ArgumentError catch (e) {
       _clearAuthDataAndNotify(errorMessage:  e.message);
       print('AuthViewModel: 로그인 입력 오류 - ${e.message}');
+      success = false;
     } catch (e) {
       _clearAuthDataAndNotify(errorMessage: '로그인 중 오류가 발생했습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요.');
       print('AuthViewModel: 로그인 중 예외 발생 - $e');
+      success = false;
+    } finally {
+      _setLoading(false);
     }
+    return success;
   }
 
   Future<void> logout() async {
@@ -180,8 +192,51 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners(); 
   }
 
-  Future<void> signUp({required String email, required String password, required String name, required String nickname, required String? phone, required String? description, required BuildContext context}) async {
-    
+  Future<bool> signUp({
+    required String name, 
+    required String nickname, 
+    required String email, 
+    required String password, 
+    String? description, 
+    String? profileImage, 
+    String? phoneNumber,
+    required String role,
+    }) async {
+    _setLoading(true);
+    _authErrorMessage = null;
+    bool success = false;
+
+    final request = SignUpRequest(
+      name: name,
+      nickname: nickname,
+      email: email,
+      password: password,
+      description: description,
+      profileImage: profileImage,
+      phoneNumber: phoneNumber,
+      role: role,
+    );
+
+    try {
+      final response = await _signUpUsecase.execute(request);
+
+      if (response.isSuccess) {
+        print('AuthViewModel: 회원가입 성공 - 사용자 ID: ${response.result}');
+        success = true;
+      } else {
+        _authErrorMessage = response.message;
+        print('AuthViewModel: 회원가입 실패 - ${response.message} (코드: ${response.code})');
+      }
+    } on ArgumentError catch (e) {
+      _authErrorMessage = e.message;
+      print('AuthViewModel: 회원가입 입력 오류 - ${e.message}');
+    } catch (e) {
+      _authErrorMessage = '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      print('AuthViewModel: 회원가입 중 예외 발생 - $e');
+    } finally {
+      _setLoading(false);
+    }
+    return success;
   }
 
   Future<bool> changePassword({

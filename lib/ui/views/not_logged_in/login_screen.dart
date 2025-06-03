@@ -20,13 +20,56 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+  bool _isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
 
-  void _submitForm() {
+  void _submitForm() async {
+    if (_isSubmitting) return; // 중복 제출 방지
+
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+      FocusScope.of(context).unfocus();
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      authViewModel.login(email: widget.emailController.text, password: widget.passwordController.text);
-    }
+      
+      try {
+        bool success = await authViewModel.login(
+          email: widget.emailController.text,
+          password: widget.passwordController.text,
+        );
+
+        if (!mounted) {
+          return;
+        } else {
+          if (success) {
+            // 로그인 성공 후 처리
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('로그인 성공!')),
+            );
+            widget.emailController.clear();
+            widget.passwordController.clear();
+          } else {
+            // 로그인 실패 처리
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('로그인 실패. 다시 시도해주세요.')),
+            );
+          }
+        }
+      } catch (e) {
+        if (!mounted) {
+          return;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('오류 발생: $e')),
+          );
+        }
+      } finally {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    } 
   }
 
   @override
@@ -155,22 +198,29 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             divider,
             ElevatedButton(
-              onPressed: () {
-                //테스트용 코드. 삭제할 것.
-                Provider.of<AuthViewModel>(context, listen : false).testlogin();
-                FocusScope.of(context).unfocus();
-                //_submitForm();
-              },
+              onPressed: _isSubmitting ? null : _submitForm,
               style: theme.elevatedButtonTheme.style!.copyWith(
-                minimumSize: WidgetStateProperty.all(Size(double.infinity, 50)),
-              ),
-              child: Text(
-                '로그인',
-                style: theme.textTheme.bodyLarge!.copyWith(
-                  color: theme.colorScheme.onPrimary,
+                minimumSize: WidgetStateProperty.all(
+                  Size(double.infinity, 50)
                 ),
               ),
+              child: _isSubmitting
+                    ? SizedBox( // 로딩 인디케이터 크기 조절
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: theme.colorScheme.onPrimary,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : Text(
+                        '로그인',
+                        style: theme.textTheme.bodyLarge!.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      ),
             ),
+            const SizedBox(height: 30),
           ],
         ),
       )));

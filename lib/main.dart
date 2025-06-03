@@ -11,6 +11,7 @@ import 'package:ajoufinder/domain/usecases/boards/lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/my_comments_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/profile_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/sign_up_usecase.dart';
 import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/auth_gate.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
@@ -38,6 +39,7 @@ void main() async {
             getIt<LoginUsecase>(),
             getIt<ChangePasswordUsecase>(),
             getIt<ProfileUsecase>(),
+            getIt<SignUpUsecase>(),
           ),
         ),  
         ChangeNotifierProvider(create: (_) => BoardViewModel(

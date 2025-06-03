@@ -1,4 +1,3 @@
-import 'package:ajoufinder/data/dto/user/profile/profile_response.dart';
 import 'package:ajoufinder/domain/entities/user.dart';
 import 'package:ajoufinder/domain/repository/auth_repository.dart';
 
@@ -10,7 +9,7 @@ class ProfileUsecase {
   Future<User?> execute() async {
     try {
 
-      final ProfileResponse response = await _authRepository.getCurrentUserProfile();
+      final response = await _authRepository.getCurrentUserProfile();
 
       if (response.isSuccess && response.result != null) {
         print('프로필 정보 조회 성공 (Usecase): ${response.result!.name}');

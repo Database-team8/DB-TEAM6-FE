@@ -26,6 +26,7 @@ import 'package:ajoufinder/domain/usecases/auth/logout_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/my_comments_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/profile_usecase.dart';
+import 'package:ajoufinder/domain/usecases/user/sign_up_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 
@@ -37,7 +38,9 @@ Future<void> setUpDependencies() async {
   getIt.registerLazySingleton<BoardRepository>(() => BoardRepositoryImpl(getIt<http.Client>(), getIt<CookieService>()));
   getIt.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl());
   getIt.registerLazySingleton<AlarmRepository>(() => AlarmRepositoryImpl());
-  getIt.registerLazySingleton<UserRepository>(() => UserRepositoryImpl());
+  getIt.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(
+    getIt<http.Client>(),
+  ));
   getIt.registerLazySingleton<LocationRepository>(() => LocationRepositoryImpl(getIt<http.Client>(),));
   getIt.registerLazySingleton<ConditionRepository>(() => ConditionRepositoryImpl());
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(getIt<http.Client>(), getIt<CookieService>()));
@@ -53,4 +56,5 @@ Future<void> setUpDependencies() async {
   getIt.registerFactory<FoundBoardsUsecase>(() => FoundBoardsUsecase(getIt<BoardRepository>()),);
   getIt.registerFactory<MyAlarmsUsecase>(() => MyAlarmsUsecase(getIt<AlarmRepository>()),);
   getIt.registerFactory<DetailedBoardUsecase>(() => DetailedBoardUsecase(getIt<BoardRepository>()),);
+  getIt.registerFactory<SignUpUsecase>(() => SignUpUsecase(getIt<UserRepository>()),);
 }

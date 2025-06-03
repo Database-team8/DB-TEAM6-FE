@@ -32,21 +32,66 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
 
-  void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-      await authViewModel.signUp(
-        email: widget.emailController.text,
-        password: widget.passwordController.text,
-        name: widget.nameController.text,
-        nickname: widget.nickNameController.text,
-        phone: widget.phoneNumberController.text,
-        description: widget.descriptionController.text,
-        context: context,
-      ); // 다시 쓰기
+  void _submitForm() async {
+    if (_isSubmitting) return; // 중복 제출 방지
+
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      FocusScope.of(context).unfocus();
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      
+      try {
+        bool success = await authViewModel.signUp(
+          name: widget.nameController.text,
+          nickname: widget.nickNameController.text,
+          email: widget.emailController.text,
+          password: widget.passwordController.text,
+          description: widget.descriptionController.text,
+          phoneNumber: widget.phoneNumberController.text,
+          role: 'GUEST',
+        );
+        if (!mounted) {
+          return;
+        } else {
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('회원가입에 성공했습니다. 로그인해주세요.')),
+            );
+            widget.onSwitchToLogin(); // 로그인 화면으로 전환
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(authViewModel.authErrorMessage ?? '회원가입에 실패했습니다. 다시 시도해주세요.'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (!mounted) {
+          return;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('예상치 못한 오류가 발생했습니다: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
+      }
     }
   }
 
@@ -92,13 +137,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: '아직 계정이 없으신가요?\n',
+                        text: '이미 계정이 있으신가요?\n',
                         style: theme.textTheme.labelLarge!.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       TextSpan(
-                        text: '회원가입',
+                        text: '로그인',
                         recognizer:
                             TapGestureRecognizer()
                               ..onTap = widget.onSwitchToLogin,
@@ -308,8 +353,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
-                  if (value != null &&
-                      !RegExp(r'^01[016789]\d{8}$').hasMatch(value)) {
+                  if (value != null && value.isNotEmpty &&
+                      !RegExp(r'^01[016789]\d{7,8}$').hasMatch(value)) {
                     return '공란, 또는 01012345678';
                   }
                   return null;
@@ -339,27 +384,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () {
-                  //테스트용 코드. 삭제할 것.
-                  Provider.of<AuthViewModel>(
-                    context,
-                    listen: false,
-                  ).testlogin();
-                  FocusScope.of(context).unfocus();
-                  //_submitForm();
-                },
+                onPressed: _isSubmitting ? null : _submitForm,
                 style: theme.elevatedButtonTheme.style!.copyWith(
                   minimumSize: WidgetStateProperty.all(
                     Size(double.infinity, 50),
                   ),
                 ),
-                child: Text(
-                  '회원가입',
-                  style: theme.textTheme.bodyLarge!.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                  ),
-                ),
+                child: _isSubmitting
+                    ? SizedBox( // 로딩 인디케이터 크기 조절
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: theme.colorScheme.onPrimary,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : Text(
+                        '회원가입',
+                        style: theme.textTheme.bodyLarge!.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

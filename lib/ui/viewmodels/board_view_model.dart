@@ -54,8 +54,12 @@ class BoardViewModel extends ChangeNotifier{
     this._foundBoardsUsecase,
     this._detailedBoardUsecase,
     ) {
-    fetchItemTypes();
-    fetchLocations();
+    initialize();
+  }
+
+  void initialize() async {
+    await fetchItemTypes();
+    await fetchLocations();
   }
 
   void _setLoadingBoards(bool loading) {
