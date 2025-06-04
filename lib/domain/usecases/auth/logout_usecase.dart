@@ -6,13 +6,9 @@ class LogoutUsecase {
 
   LogoutUsecase(this._authRepository);
 
-  Future<LogoutResponse> execute(String accessToken) async {
-    if (accessToken.isEmpty) {
-      throw ArgumentError('Access token cannot be empty.');
-    }
-
+  Future<LogoutResponse> execute() async {
     try {
-      final response = await _authRepository.logout(accessToken);
+      final response = await _authRepository.logout();
 
       if (response.isSuccess) {
         print('로그아웃 성공 (Usecase): ${response.message}');

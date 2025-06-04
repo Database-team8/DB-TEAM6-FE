@@ -18,15 +18,16 @@ class AuthRepositoryImpl extends AuthRepository{
   AuthRepositoryImpl(this._client, this._cookieService);
 
   @override
-  Future<LogoutResponse> logout(String accessToken) async {
+  Future<LogoutResponse> logout() async {
     final url = Uri.parse('$baseUrl/auth/logout');
 
     try {
+      final sessionId = await _cookieService.getCookie(cookieName);
       final response = await _client.post(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
+          'Cookie': '$cookieName=$sessionId',
         },
       );
 

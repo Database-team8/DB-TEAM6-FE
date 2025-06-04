@@ -158,21 +158,14 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading(true);
-    String? cookie;
 
     try {
-      cookie = await _cookieService.getCookie(cookieName);
-
-      if (cookie != null && cookie.isNotEmpty) {
-        final LogoutResponse response = await _logoutUsecase.execute(cookie);
-
-        if (response.isSuccess) {
-          print("AuthViewModel: 서버 로그아웃 성공 - ${response.message}");
-        } else {
-          print("AuthViewModel: 서버 로그아웃 실패 - ${response.message} (코드: ${response.code})");
-        }
+      final LogoutResponse response = await _logoutUsecase.execute();
+      
+      if (response.isSuccess) {
+        print("AuthViewModel: 서버 로그아웃 성공 - ${response.message}");
       } else {
-        print("AuthViewModel: 로컬에 액세스 토큰이 없어 서버 로그아웃을 건너<0xEB><0_>니다.");
+        print("AuthViewModel: 서버 로그아웃 실패 - ${response.message} (코드: ${response.code})");
       }     
     } catch (e) {
       print("AuthViewModel: 로그아웃 유스케이스 실행 중 오류: $e");
