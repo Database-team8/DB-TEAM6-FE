@@ -88,7 +88,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
             description: _contentController.text,
             relatedDate: _selectedDate!,
             image: '',
-            category: widget.lostCategory,
+            category: widget.lostCategory.toUpperCase(),
             itemTypeId: _selectedItemType?.id ?? 0,
             locationId: _selectedLocation?.id ?? 0,
           );
@@ -99,7 +99,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
             description: _contentController.text,
             relatedDate: _selectedDate ?? DateTime.now(),
             image: '',
-            category: widget.lostCategory,
+            category: widget.lostCategory.toUpperCase(),
             itemTypeId: _selectedItemType?.id ?? 0,
             locationId: _selectedLocation?.id ?? 0,
           );  
