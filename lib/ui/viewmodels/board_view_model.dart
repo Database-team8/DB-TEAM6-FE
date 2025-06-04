@@ -4,6 +4,8 @@ import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
 import 'package:ajoufinder/domain/usecases/location/locations_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/lost_boards_usecase.dart';
@@ -17,6 +19,8 @@ class BoardViewModel extends ChangeNotifier{
   final LostBoardsUsecase _lostBoardsUsecase;
   final FoundBoardsUsecase _foundBoardsUsecase;
   final DetailedBoardUsecase _detailedBoardUsecase;
+  final PostLostBoardUsecase _postLostBoardUseCase;
+  final PostFoundBoardUsecase _postFoundBoardUseCase;
 
   List<BoardItem> _boardItems = [];
   Board? _selectedBoard;
@@ -26,10 +30,12 @@ class BoardViewModel extends ChangeNotifier{
   bool _isLoadingItemTypes = false;
   bool _isLoadingLocations = false;
   bool _isLoadingBoardDetails = false;
+  bool _isPosting = false;
   String? _boardError;
   String? _itemTypeError; 
   String? _locationError;
   String? _boardDetailsError;
+  String? _postError;
 
   List<BoardItem> get boards => _boardItems;
   Board? get selectedBoard => _selectedBoard;
@@ -39,10 +45,12 @@ class BoardViewModel extends ChangeNotifier{
   bool get isLoadingItemTypes => _isLoadingItemTypes;
   bool get isLoadingLocations => _isLoadingLocations;
   bool get isLoadingBoardDetails => _isLoadingBoardDetails;
+  bool get isPosting => _isPosting;
   String? get boardError => _boardError;
   String? get itemTypeError => _itemTypeError;
   String? get locationError => _locationError;
   String? get boardDetailsError => _boardDetailsError;
+  String? get postError => _postError;
 
   bool get isLoading => _isLoadingBoardItems || _isLoadingItemTypes || _isLoadingLocations || _isLoadingBoardDetails;
 
@@ -53,6 +61,8 @@ class BoardViewModel extends ChangeNotifier{
     this._lostBoardsUsecase,
     this._foundBoardsUsecase,
     this._detailedBoardUsecase,
+    this._postLostBoardUseCase,
+    this._postFoundBoardUseCase,
     ) {
     initialize();
   }
@@ -86,6 +96,13 @@ class BoardViewModel extends ChangeNotifier{
   void _setLoadingBoardDetails(bool loading) {
     if (_isLoadingBoardDetails != loading) {
       _isLoadingBoardDetails = loading;
+      notifyListeners();
+    }
+  }
+
+  void _setPosting(bool posting) {
+    if (_isPosting != posting) {
+      _isPosting = posting;
       notifyListeners();
     }
   }
@@ -190,8 +207,96 @@ class BoardViewModel extends ChangeNotifier{
     }
   }
 
-  Future<void> addBoard() async {
+  Future<bool> postLostBoard({
+    required title,
+    required detailedLocation,
+    required description,
+    required relatedDate,
+    required image,
+    required category,
+    required itemTypeId,
+    required locationId,
+  }) async {
+    _setPosting(true);
+    _postError = null;
 
+    bool success = false;
+
+    try {
+      final result = await _postLostBoardUseCase.execute(
+        title: title,
+        detailedLocation: detailedLocation,
+        description: description,
+        relatedDate: relatedDate,
+        image: image,
+        category: category,
+        itemTypeId: itemTypeId,
+        locationId: locationId,
+      );
+
+      if (result != null) {
+        print('BoardViewModel: 게시글 작성 성공 - ID: $result');
+        success = true;
+      } else {
+        _postError = '게시글 작성에 실패했습니다.';
+        print('BoardViewModel: 게시글 작성 실패 - 서버에서 null 반환');
+      }
+    } on ArgumentError catch (e) {
+      _postError = e.message;
+      _isPosting = false;
+    } catch (e) {
+      _postError = '게시글 등록에 실패했습니다. 잠시 후 다시 시도해주세요. : $e';
+      _isPosting = false;
+    } finally {
+      _setPosting(false);
+    }
+    return success;
+  }
+
+  Future<bool> postFoundBoard({
+    required title,
+    required detailedLocation,
+    required description,
+    required relatedDate,
+    required image,
+    required category,
+    required itemTypeId,
+    required locationId,
+  }) async {
+    _setPosting(true);
+    _postError = null;
+
+    bool success = false;
+
+    try {
+      final result = await _postFoundBoardUseCase.execute(
+        title: title,
+        detailedLocation: detailedLocation,
+        description: description,
+        relatedDate: relatedDate,
+        image: image,
+        category: category,
+        itemTypeId: itemTypeId,
+        locationId: locationId,
+      );
+
+      if (result != null) {
+        print('BoardViewModel: 게시글 작성 성공 - ID: $result');
+        success = true;
+      } else {
+        _postError = '게시글 작성에 실패했습니다.';
+        print('BoardViewModel: 게시글 작성 실패 - 서버에서 null 반환');
+      }
+    } on ArgumentError catch (e) {
+      _postError = e.message;
+      _isPosting = false;
+    } catch (e) {
+      _postError = '게시글 등록에 실패했습니다. 잠시 후 다시 시도해주세요. : $e';
+      _isPosting = false;
+    } finally {
+      _setPosting(false);
+    }
+    return success;
   }
 
   Future<void> fetchBoardDetails(int boardId) async {

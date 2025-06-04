@@ -4,8 +4,9 @@ import 'package:ajoufinder/data/dto/board/boards/boards_request.dart';
 import 'package:ajoufinder/data/dto/board/boards/boards_response.dart';
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_request.dart';
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_response.dart';
+import 'package:ajoufinder/data/dto/board/post_board/post_board_request.dart';
+import 'package:ajoufinder/data/dto/board/post_board/post_board_response.dart';
 import 'package:ajoufinder/data/dto/itemtype/itemtypes/itemtypes_response.dart';
-import 'package:ajoufinder/domain/entities/board.dart';
 import 'package:ajoufinder/domain/entities/board_item.dart';
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
 import 'package:ajoufinder/domain/repository/board_repository.dart';
@@ -18,8 +19,66 @@ class BoardRepositoryImpl extends BoardRepository{
   BoardRepositoryImpl(this._client, this._cookieService);
 
   @override
-  Future<void> addNewBoard(Board board) async {
-    throw UnimplementedError();
+  Future<PostBoardResponse> postFoundBoard(PostBoardRequest request) async {
+    final url = Uri.parse('$baseUrl/boards/found');
+    try {
+      final cookie = await _cookieService.getCookie(cookieName);
+      final response = await _client.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Cookie' : '$cookieName=$cookie',
+        },
+        body: json.encode(request.toJson()),
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return PostBoardResponse.fromJson(responseBody);
+      } else {
+        print('습득 게시글 등록 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('습득 게시글 등록 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('습득 게시글 등록 API 네트워크 오류 발생: $e');
+      throw Exception('습득 게시글 등록 중 네트워크 연결에 실패했습니다.');
+    } catch (e) {
+      print('습득 게시글 등록 API 응답 처리 중 예외 발생: $e');
+      throw Exception('습득 게시글 등록 응답 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  @override
+  Future<PostBoardResponse> postLostBoard(PostBoardRequest request) async {
+    final url = Uri.parse('$baseUrl/boards/lost');
+
+    try {
+      final cookie = await _cookieService.getCookie(cookieName);
+      final response = await _client.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Cookie' : '$cookieName=$cookie',
+        },
+        body: json.encode(request.toJson()),
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return PostBoardResponse.fromJson(responseBody);
+      } else {
+        print('분실 게시글 등록 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('분실 게시글 등록 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('분실 게시글 등록 API 네트워크 오류 발생: $e');
+      throw Exception('분실 게시글 등록 중 네트워크 연결에 실패했습니다.');
+    } catch (e) {
+      print('분실 게시글 등록 API 응답 처리 중 예외 발생: $e');
+      throw Exception('분실 게시글 등록 응답 처리 중 오류가 발생했습니다.');
+    }
   }
 
   @override

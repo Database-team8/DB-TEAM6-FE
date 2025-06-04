@@ -2,7 +2,7 @@ class PostBoardRequest {
   final String title;
   final String detailedLocation;
   final String description;
-  final String relatedDate;
+  final DateTime relatedDate;
   final String image;
   final String category;
   final int itemTypeId;
@@ -24,23 +24,11 @@ class PostBoardRequest {
       'title': title,
       'detailed_location': detailedLocation,
       'description': description,
-      'related_date': relatedDate,
+      'related_date': relatedDate.toIso8601String(),
       'image': image,
       'category': category,
       'item_type_id': itemTypeId,
       'location_id': locationId,
     };
   }
-
-  // DateTime을 받아서 ISO 8601 문자열로 변환하는 편의 생성자
-  PostBoardRequest.withDateTime({
-    required this.title,
-    required this.detailedLocation,
-    required this.description,
-    required DateTime relatedDateTime,
-    required this.image,
-    required this.category,
-    required this.itemTypeId,
-    required this.locationId,
-  }) : relatedDate = relatedDateTime.toIso8601String();
 }

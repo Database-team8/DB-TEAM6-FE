@@ -8,7 +8,6 @@ class ProfileUsecase {
 
   Future<User> execute() async {
     try {
-
       final response = await _authRepository.getCurrentUserProfile();
 
       if (response.isSuccess && response.result != null) {

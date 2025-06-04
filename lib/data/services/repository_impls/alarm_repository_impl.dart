@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:ajoufinder/const/network.dart';
 import 'package:ajoufinder/data/dto/alarm/alarms/alarms_response.dart';
 import 'package:ajoufinder/domain/entities/alarm.dart';

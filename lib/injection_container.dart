@@ -18,6 +18,8 @@ import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
@@ -98,5 +100,11 @@ Future<void> setUpDependencies() async {
   ));
   getIt.registerFactory<AlarmsUsecase>(() => AlarmsUsecase(
     getIt<AlarmRepository>()
+  ));
+  getIt.registerFactory<PostLostBoardUsecase>(() => PostLostBoardUsecase(
+    getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<PostFoundBoardUsecase>(() => PostFoundBoardUsecase(
+    getIt<BoardRepository>()
   ));
 }

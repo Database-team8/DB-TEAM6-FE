@@ -70,9 +70,31 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
           context,
           listen: false,
         );
-        await boardViewModel.addBoard(
-          /** 파라미터 추후 구현*/
-        );
+        bool success = false;
+
+        if (widget.lostCategory == 'lost') {
+          success = await boardViewModel.postLostBoard(
+            title: _titleController.text,
+            detailedLocation: _detailedLocationController.text,
+            description: _contentController.text,
+            relatedDate: _selectedDate!,
+            image: _selectedImage,
+            category: widget.lostCategory,
+            itemTypeId: _selectedItemType?.id ?? 0,
+            locationId: _selectedLocation?.id ?? 0,
+          );
+        } else {
+          success = await boardViewModel.postFoundBoard(
+            title: _titleController.text,
+            detailedLocation: _detailedLocationController.text,
+            description: _contentController.text,
+            relatedDate: _selectedDate!,
+            image: _selectedImage,
+            category: widget.lostCategory,
+            itemTypeId: _selectedItemType?.id ?? 0,
+            locationId: _selectedLocation?.id ?? 0,
+          );  
+        }
 
         if (mounted) {
           Navigator.of(context).pop();
