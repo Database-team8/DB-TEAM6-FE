@@ -30,25 +30,33 @@ class BoardsResponse {
   });
 
   factory BoardsResponse.fromJson(Map<String, dynamic> json) {
-    var contentListFromJson = json['content'] as List<dynamic>?;
-    List<BoardItemDto> boardList = contentListFromJson != null
-        ? contentListFromJson.map((itemJson) => BoardItemDto.fromJson(itemJson as Map<String, dynamic>)).toList()
-        : [];
+  // content 처리: null이거나 List 타입이 아닌 경우 빈 리스트 반환
+  final contentJson = json['content'];
+  final List<dynamic>? contentListFromJson = 
+    (contentJson is List) ? contentJson : null;
 
-    return BoardsResponse(
-      totalElements: json['totalElements'] as int,
-      totalPages: json['totalPages'] as int,
-      size: json['size'] as int,
-      content: boardList,
-      number: json['number'] as int,
-      sort: Sort.fromJson(json['sort'] as Map<String, dynamic>),
-      first: json['first'] as bool,
-      last: json['last'] as bool,
-      numberOfElements: json['numberOfElements'] as int,
-      pageable: Pageable.fromJson(json['pageable'] as Map<String, dynamic>),
-      empty: json['empty'] as bool,
-    );
-  }
+  List<BoardItemDto> boardList = contentListFromJson != null
+      ? contentListFromJson
+          .map((itemJson) => BoardItemDto.fromJson(
+              itemJson as Map<String, dynamic>))
+          .toList()
+      : <BoardItemDto>[];
+
+  return BoardsResponse(
+    totalElements: (json['totalElements'] as int?) ?? 0,
+    totalPages: (json['totalPages'] as int?) ?? 0,
+    size: (json['size'] as int?) ?? 0,
+    content: boardList,
+    number: (json['number'] as int?) ?? 0,
+    sort: Sort.fromJson(json['sort'] as Map<String, dynamic>), 
+    first: (json['first'] as bool?) ?? false,
+    last: (json['last'] as bool?) ?? false,
+    numberOfElements: (json['numberOfElements'] as int?) ?? 0,
+    pageable: Pageable.fromJson(json['pageable'] as Map<String, dynamic>),
+    empty: (json['empty'] as bool?) ?? true,
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {

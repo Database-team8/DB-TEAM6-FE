@@ -23,7 +23,7 @@ class AuthRepositoryImpl extends AuthRepository{
 
     try {
       final sessionId = await _cookieService.getCookie(cookieName);
-      final response = await _client.post(
+      final response = await _client.post( 
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',

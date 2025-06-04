@@ -3,7 +3,7 @@ class BoardsRequest {
   final int? size;
 
   BoardsRequest({
-    this.page,
-    this.size,
+    this.page = 0,
+    this.size = 10,
   });
 }

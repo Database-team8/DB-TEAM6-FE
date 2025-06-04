@@ -19,12 +19,12 @@ class BoardItemDto {
 
   factory BoardItemDto.fromJson(Map<String, dynamic> json) {
     return BoardItemDto(
-      boardId: json['board_id'] as int,
-      title: json['title'] as String,
-      nickname: json['nickname'] as String,
-      createdAt: json['created_at'] as String,
-      status: json['status'] as String,
-      image: json['image'] as String?,
+      boardId: (json['board_id'] as int?) ?? 0,
+      title: (json['title'] as String?) ?? '기본 제목',
+      nickname: (json['nickname'] as String?) ?? '익명',
+      createdAt: (json['created_at'] as String?) ?? DateTime.now().toIso8601String(),
+      status: (json['status'] as String?) ?? 'unknown',
+      image: (json['image'] as String?) ?? '',
     );
   }
 

@@ -31,17 +31,17 @@ class Board {
 
   factory Board.fromJson(Map<String, dynamic> json) {
     return Board(
-      id: json['board_id'] as int,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      image: json['image'] as String?,
+      id: (json['board_id'] as int?) ?? 0,
+      title: (json['title'] as String?) ?? '기본 제목',
+      description: (json['description'] as String?) ?? ' ',
+      image: (json['image'] as String?) ?? ' ',
       location: Location.fromJson(json['location'] as Map<String, dynamic>),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
-      status: json['status'] as String,
-      category: json['category'] as String,
+      status: (json['status'] as String?) ?? 'unknown',
+      category: (json['category'] as String?) ?? '기타',
       itemType: ItemType.fromJson(json['item_type'] as Map<String, dynamic>),
-      createdAt: json['created_at'] as DateTime,
-      updatedAt: json['updated_at'] as DateTime,
+      createdAt: (json['created_at'] as DateTime?) ?? DateTime.now(),
+      updatedAt: (json['updated_at'] as DateTime?) ?? DateTime.now(),
     );
   }
 
