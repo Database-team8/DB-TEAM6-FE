@@ -1,7 +1,7 @@
 import 'dart:ui';
-
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
 import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
@@ -55,6 +55,7 @@ void main() async {
           getIt<DetailedBoardUsecase>(),
           getIt<PostLostBoardUsecase>(),
           getIt<PostFoundBoardUsecase>(),
+          getIt<DeleteBoardUsecase>(),
         )),  
         ChangeNotifierProvider(create: (_) => CommentViewModel(
           getIt<MyCommentsUsecase>(),

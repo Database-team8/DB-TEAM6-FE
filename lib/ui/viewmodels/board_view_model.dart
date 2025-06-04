@@ -2,6 +2,7 @@ import 'package:ajoufinder/domain/entities/board.dart';
 import 'package:ajoufinder/domain/entities/board_item.dart';
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
+import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
@@ -21,6 +22,7 @@ class BoardViewModel extends ChangeNotifier{
   final DetailedBoardUsecase _detailedBoardUsecase;
   final PostLostBoardUsecase _postLostBoardUseCase;
   final PostFoundBoardUsecase _postFoundBoardUseCase;
+  final DeleteBoardUsecase _deleteBoardUsecase;
 
   List<BoardItem> _boardItems = [];
   Board? _selectedBoard;
@@ -63,6 +65,7 @@ class BoardViewModel extends ChangeNotifier{
     this._detailedBoardUsecase,
     this._postLostBoardUseCase,
     this._postFoundBoardUseCase,
+    this._deleteBoardUsecase,
     ) {
     initialize();
   }
@@ -317,5 +320,30 @@ class BoardViewModel extends ChangeNotifier{
     } finally {
       _setLoadingBoards(false);
     }
+  }
+
+  Future<bool> deleteBoard(int boardId) async {
+    _setPosting(true);
+    _postError = null;
+
+    bool success = false;
+
+    try {
+      final result = await _deleteBoardUsecase.execute(boardId);
+
+      if (result) {
+        print('BoardViewModel: 게시글 삭제 성공 - ID: $boardId');
+        success = true;
+      } else {
+        _postError = '게시글 삭제에 실패했습니다.';
+        print('BoardViewModel: 게시글 삭제 실패 - 서버에서 false 반환');
+      }
+    } catch (e) {
+      _postError = '게시글 삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요. : $e';
+      print('BoardViewModel: 게시글 삭제 중 오류: $e');
+    } finally {
+      _setPosting(false);
+    }
+    return success;
   }
 }

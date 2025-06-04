@@ -1,5 +1,7 @@
 import 'package:ajoufinder/data/dto/board/boards/boards_request.dart';
 import 'package:ajoufinder/data/dto/board/boards/boards_response.dart';
+import 'package:ajoufinder/data/dto/board/boards/delete_board/delete_board_request.dart';
+import 'package:ajoufinder/data/dto/board/boards/delete_board/delete_board_response.dart';
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_request.dart';
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_response.dart';
 import 'package:ajoufinder/data/dto/board/post_board/post_board_request.dart';
@@ -17,4 +19,5 @@ abstract class BoardRepository {
   Future<BoardsResponse> getLostBoards(BoardsRequest request);
   Future<DetailedBoardResponse> getBoardById(DetailedBoardRequest request);
   Future<BoardsResponse> getMyBoards(BoardsRequest request);
+  Future<DeleteBoardResponse> deleteBoard(DeleteBoardRequest request);
 }
