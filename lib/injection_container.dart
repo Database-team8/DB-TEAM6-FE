@@ -15,12 +15,13 @@ import 'package:ajoufinder/domain/repository/location_repository.dart';
 import 'package:ajoufinder/domain/repository/alarm_repository.dart';
 import 'package:ajoufinder/domain/repository/user_repository.dart';
 import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
-import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/post_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
@@ -55,7 +56,9 @@ Future<void> setUpDependencies() async {
   getIt.registerLazySingleton<LocationRepository>(() => LocationRepositoryImpl(
     getIt<http.Client>(),
   ));
-  getIt.registerLazySingleton<ConditionRepository>(() => ConditionRepositoryImpl());
+  getIt.registerLazySingleton<ConditionRepository>(() => ConditionRepositoryImpl(
+    getIt<http.Client>(),
+  ));
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
     getIt<http.Client>(), 
     getIt<CookieService>()
@@ -90,9 +93,6 @@ Future<void> setUpDependencies() async {
   getIt.registerFactory<FoundBoardsUsecase>(() => FoundBoardsUsecase(
     getIt<BoardRepository>()
   ));
-  getIt.registerFactory<MyAlarmsUsecase>(() => MyAlarmsUsecase(
-    getIt<AlarmRepository>()
-  ));
   getIt.registerFactory<DetailedBoardUsecase>(() => DetailedBoardUsecase(
     getIt<BoardRepository>()
   ));
@@ -110,5 +110,11 @@ Future<void> setUpDependencies() async {
   ));
   getIt.registerFactory<DeleteBoardUsecase>(() => DeleteBoardUsecase(
     getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<PostConditionUsecase>(() => PostConditionUsecase(
+    getIt<ConditionRepository>()
+  ));
+  getIt.registerFactory<ConditionsUsecase>(() => ConditionsUsecase(
+    getIt<ConditionRepository>()
   ));
 }

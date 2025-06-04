@@ -8,10 +8,10 @@ class PostFoundBoardUsecase {
 
   Future<int?> execute({
     required String title,
-    required String detailedLocation,
+    String? detailedLocation,
     required String description,
-    required DateTime relatedDate,
-    required String image,
+    DateTime? relatedDate,
+    String? image,
     required String category,
     required int itemTypeId,
     required int locationId,

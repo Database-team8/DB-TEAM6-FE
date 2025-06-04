@@ -66,17 +66,6 @@ class AuthViewModel extends ChangeNotifier {
       _updateAuthState(isLoggedIn: true, user: fetchedUser);
       print('AuthViewModel: 사용자 정보 로드 성공 - ID: ${fetchedUser.name}');
       return true;
-      /**
-      if (fetchedUser != null) {
-        _updateAuthState(isLoggedIn: true, user: fetchedUser);
-        print('AuthViewModel: 사용자 정보 로드 성공 - ID: ${fetchedUser.name}');
-        return true;
-      } else {
-        print('AuthViewModel: 사용자를 찾을 수 없습니다.');
-        // 사용자를 못 찾으면 로그아웃 상태로 처리
-        await _clearAuthDataAndNotify(errorMessage: '사용자 정보를 찾을 수 없습니다.');
-        return false;
-      }*/
     } catch (e) {
       print('AuthViewModel: 사용자 정보 로드 중 오류: $e');
       await _clearAuthDataAndNotify(errorMessage: '사용자 정보 로드 중 오류가 발생했습니다.');
@@ -97,14 +86,9 @@ class AuthViewModel extends ChangeNotifier {
       final accessToken = await _cookieService.getCookie(cookieName);
 
       if (accessToken != null && accessToken.isNotEmpty) {
-        User? user = await _profileUsecase.execute();
-
-        if (user != null) {
-          _updateAuthState(isLoggedIn: true, user: user);
-          print('AuthViewModel: 세션을 통해 로그인 상태 복원 성공 - 사용자: ${user.name}');
-        } else {
-          await _clearAuthDataAndNotify(errorMessage: '세션이 만료되었거나 유효하지 않습니다.');
-        }
+        User user = await _profileUsecase.execute();
+        _updateAuthState(isLoggedIn: true, user: user);
+        print('AuthViewModel: 세션을 통해 로그인 상태 복원 성공 - 사용자: ${user.name}');
       } else {
         _updateAuthState(isLoggedIn: false);
       }
@@ -125,18 +109,9 @@ class AuthViewModel extends ChangeNotifier {
       final response = await _loginUsecase.execute(email: email, password: password);
 
       if (response.isSuccess) {
-        final sessionId = response.result;
-        await _cookieService.setCookie(cookieName, sessionId, maxAgeInSeconds: 60 * 60 * 24 * 7);
-        final cookie = await _cookieService.getCookie(cookieName);
-
-        // 쿠키 활용하는 구조로 바꾸기
-        if (cookie == null) {
-          await _clearAuthDataAndNotify(errorMessage: '잘못된 사용자 ID 형식입니다.');
-        } else {
-          await _fetchAndSetUser();
-          print('AuthViewModel: 로그인 성공');
-          success = true;
-        }
+        await _fetchAndSetUser();
+        print('AuthViewModel: 로그인 성공');
+        success = true;
       } else {
         _clearAuthDataAndNotify(errorMessage:  response.message);
         print('AuthViewModel: 로그인 실패 - ${response.message} (코드: ${response.code})');

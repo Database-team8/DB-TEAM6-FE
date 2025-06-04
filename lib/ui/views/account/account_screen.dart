@@ -1,4 +1,4 @@
-import 'package:ajoufinder/ui/shared/widgets/keywords_setting_screen.dart';
+import 'package:ajoufinder/ui/shared/widgets/conditions_setting_screen.dart';
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/views/account/change_password_screen.dart';
 import 'package:ajoufinder/ui/views/account/my_boards_screen.dart';
@@ -189,7 +189,7 @@ class _AccountScreenState extends State<AccountScreen> {
               MaterialPageRoute(builder: (context) => Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: 400),
-                  child: KeywordsSettingScreen()
+                  child: ConditionsSettingScreen()
                 ),
               )),
             ),

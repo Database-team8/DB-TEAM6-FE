@@ -3,18 +3,16 @@ import 'package:ajoufinder/domain/entities/board.dart';
 import 'package:ajoufinder/domain/repository/board_repository.dart';
 
 class DetailedBoardUsecase {
-  final BoardRepository _repository;
+  final BoardRepository _boardRepository;
 
-  DetailedBoardUsecase(this._repository);
+  DetailedBoardUsecase(this._boardRepository);
 
-  Future<Board?> execute(int boardId) async {
-    final request = DetailedBoardRequest(boardId: boardId);
-
+  Future<Board> execute(int boardId) async {
     try {
-      final response = await _repository.getBoardById(request);
+      final response = await _boardRepository.getBoardById(DetailedBoardRequest(boardId: boardId));
 
       if (response.isSuccess && response.result != null) {
-        print('게시글 상세 조회 성공 (Usecase): 게시글 ID ${boardId}의 상세 정보 수신');
+        print('게시글 상세 조회 성공 (Usecase): 게시글 ID $boardId의 상세 정보 수신');
         // 필요한 경우, response.content를 사용하여 게시글 상세 정보를 처리합니다.
         return response.result!;
       } else {

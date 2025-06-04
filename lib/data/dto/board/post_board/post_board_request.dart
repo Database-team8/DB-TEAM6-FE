@@ -1,34 +1,42 @@
 class PostBoardRequest {
   final String title;
-  final String detailedLocation;
+  final String? detailedLocation;
   final String description;
-  final DateTime relatedDate;
-  final String image;
+  final DateTime? relatedDate;
+  final String? image;
   final String category;
   final int itemTypeId;
   final int locationId;
 
   PostBoardRequest({
     required this.title,
-    required this.detailedLocation,
+    this.detailedLocation,
     required this.description,
-    required this.relatedDate,
-    required this.image,
+    this.relatedDate,
+    this.image,
     required this.category,
     required this.itemTypeId,
     required this.locationId,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> json = {
       'title': title,
-      'detailed_location': detailedLocation,
       'description': description,
-      'related_date': relatedDate.toIso8601String(),
-      'image': image,
       'category': category,
       'item_type_id': itemTypeId,
       'location_id': locationId,
     };
+
+    if (detailedLocation != null) {
+      json['detailed_location'] = detailedLocation;
+    }
+    if (relatedDate != null) {
+      json['related_date'] = relatedDate!.toIso8601String();
+    }
+    if (image != null) {
+      json['image'] = image;
+    }
+    return json;
   }
 }

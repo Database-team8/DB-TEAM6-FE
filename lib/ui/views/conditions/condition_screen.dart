@@ -1,5 +1,4 @@
 import 'package:ajoufinder/ui/shared/widgets/condition_list_widget.dart';
-import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/condition_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +22,6 @@ class _ConditionScreenState extends State<ConditionScreen> {
   }
 
   Future<void> _fetchConditions() async {
-   final authViewModel = Provider.of<AuthViewModel>(context, listen: false); 
    await Provider.of<ConditionViewModel>(context, listen:false).fetchConditions();
   }
 
@@ -51,7 +49,7 @@ class _ConditionScreenState extends State<ConditionScreen> {
       );
     }
 
-    if (conditionViewModel.error != null) {
+    if (conditionViewModel.conditionsError != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -61,7 +59,7 @@ class _ConditionScreenState extends State<ConditionScreen> {
               Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
               const SizedBox(height: 16),
               Text(
-                conditionViewModel.error!,
+                conditionViewModel.conditionsError!,
                 style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.error),
                 textAlign: TextAlign.center,
               ),

@@ -1,11 +1,11 @@
 import 'package:ajoufinder/domain/entities/alarm.dart';
-import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
 import 'package:flutter/material.dart';
 
 class AlarmViewModel extends ChangeNotifier{
-  final MyAlarmsUsecase _myAlarmsUsecase;
+  final AlarmsUsecase _alarmsUsecase;
 
-  AlarmViewModel(this._myAlarmsUsecase);
+  AlarmViewModel(this._alarmsUsecase);
 
   List<Alarm> _alarms = [];
   bool _isLoading = false;
@@ -32,7 +32,7 @@ class AlarmViewModel extends ChangeNotifier{
     _setLoading(true);
 
     try {
-      _alarms = await _myAlarmsUsecase.execute();
+      _alarms = await _alarmsUsecase.execute();
       _error = null;
     } catch (e) {
       _error = '알림을 불러오는 중 오류가 발생했습니다.';

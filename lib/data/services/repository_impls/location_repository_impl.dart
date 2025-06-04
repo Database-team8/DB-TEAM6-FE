@@ -23,9 +23,6 @@ class LocationRepositoryImpl extends LocationRepository{
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          // 이 API는 별도의 인증 헤더가 필요 없을 수 있습니다. (API 명세에 따라 확인)
-          // 만약 JSESSIONID 쿠키 등이 필요하다면, http.Client가 자동으로 보내거나
-          // 인터셉터 등을 통해 추가해야 합니다.
         },
       );
 

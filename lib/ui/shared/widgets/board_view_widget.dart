@@ -295,7 +295,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
   Widget _buildUserInfoSection({required Board board, required BuildContext context}) {
     final theme = Theme.of(context);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final User author = board.user; // Board 객체가 User 정보를 직접 가짐
+    final author = board.user;
     final bool isAuthor = (authViewModel.currentUser != null && author == authViewModel.currentUser!);
 
     return Padding(

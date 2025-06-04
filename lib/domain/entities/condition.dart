@@ -1,34 +1,26 @@
-import 'package:ajoufinder/domain/entities/location.dart';
-
 class Condition {
   final int id;
-  final int itemTypeId;
-  final int userId;
-  final String status;
-  final List<Location>? locations;
+  final String itemType;
+  final String location;
 
   Condition({
     required this.id,
-    required this.itemTypeId,
-    required this.userId,
-    required this.status,
-    this.locations,
+    required this.itemType,
+    required this.location,
   });
 
   factory Condition.fromJson(Map<String, dynamic> json) {
     return Condition(
-      id: json['id'],
-      itemTypeId: json['item_type_id'],
-      userId: json['user_id'],
-      status: json['status'],
+      id: json['condition_id'],
+      itemType: json['item_type'] ?? '',
+      location: json['location'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'item_type_id': itemTypeId,
-      'user_id': userId,
-      'status': status,
+      'item_type': itemType,
+      'location': location,
     };
   }
 }

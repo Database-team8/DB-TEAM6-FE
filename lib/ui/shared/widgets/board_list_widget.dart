@@ -37,27 +37,43 @@ class _BoardCard extends StatelessWidget {
     final navigator = Navigator.of(context);
 
     try {
-      await boardViewModel.fetchBoardDetails(boardItem.id);
-      if (navigator.mounted) {
-        navigator.push(
-          MaterialPageRoute(
-            builder: (context) => Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: BoardViewWidget(),
+      final success = await boardViewModel.fetchBoardDetails(boardItem.id);
+
+      if (!navigator.mounted) {
+        return;
+      } else {
+        if (success) {
+          // 게시글 상세 정보가 성공적으로 로드됨
+          print('게시글 상세 정보 로드 성공: ${boardItem.title}');
+          navigator.push(
+            MaterialPageRoute(
+              builder: (context) => Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: const BoardViewWidget(),
+                    ),
                   ),
-                ),
-          ),
-        );
+            ),
+          );
+        } else {
+          // 게시글 상세 정보 로드 실패
+          final errorMessage = boardViewModel.boardError ?? '게시글 상세 정보를 불러오는 데 실패했습니다.';
+          scaffoldMessenger.showSnackBar(SnackBar(content: Text(errorMessage)));
+          print('_navigateToBoardDetail 오류: $errorMessage');
+          return;
+        }
       }
     } catch (e) {
-      final errorMessage = boardViewModel.boardError ?? e.toString();
-      if (navigator.mounted) {
+      if (!navigator.mounted) {
+        return;
+      } else {
+        final errorMessage = boardViewModel.boardError ?? e.toString();
+
         scaffoldMessenger.showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
+        print('_navigateToBoardDetail 오류: $errorMessage');
       }
-      print('_navigateToBoardDetail 오류: $errorMessage');
     }
   }
 
@@ -208,7 +224,7 @@ class _BoardBookmarkButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: theme.cardColor.withOpacity(0.85),
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(

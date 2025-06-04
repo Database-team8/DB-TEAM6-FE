@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
-import 'package:ajoufinder/domain/usecases/alarm/my_alarms_usecase.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/post_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
@@ -61,9 +63,12 @@ void main() async {
           getIt<MyCommentsUsecase>(),
         )),  
         ChangeNotifierProvider(create: (_) => AlarmViewModel(
-          getIt<MyAlarmsUsecase>(),
+          getIt<AlarmsUsecase>(),
         )),
-        ChangeNotifierProvider(create: (_) => ConditionViewModel()),
+        ChangeNotifierProvider(create: (_) => ConditionViewModel(
+          getIt<ConditionsUsecase>(),
+          getIt<PostConditionUsecase>(),
+        )),
         ChangeNotifierProvider(create: (_) => NavigatorBarViewModel()),
         ChangeNotifierProvider(create: (context) => PageViewModel(
           Provider.of<NavigatorBarViewModel>(context, listen: false),

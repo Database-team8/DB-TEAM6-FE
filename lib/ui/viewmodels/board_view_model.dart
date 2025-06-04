@@ -211,14 +211,14 @@ class BoardViewModel extends ChangeNotifier{
   }
 
   Future<bool> postLostBoard({
-    required title,
-    required detailedLocation,
-    required description,
-    required relatedDate,
-    required image,
-    required category,
-    required itemTypeId,
-    required locationId,
+    required String title,
+    String? detailedLocation,
+    required String description,
+    DateTime? relatedDate,
+    String? image,
+    required String category,
+    required int itemTypeId,
+    required int locationId,
   }) async {
     _setPosting(true);
     _postError = null;
@@ -257,14 +257,14 @@ class BoardViewModel extends ChangeNotifier{
   }
 
   Future<bool> postFoundBoard({
-    required title,
-    required detailedLocation,
-    required description,
-    required relatedDate,
-    required image,
-    required category,
-    required itemTypeId,
-    required locationId,
+    required String title,
+    String? detailedLocation,
+    required String description,
+    DateTime? relatedDate,
+    String? image,
+    required String category,
+    required int itemTypeId,
+    required int locationId,
   }) async {
     _setPosting(true);
     _postError = null;
@@ -302,24 +302,31 @@ class BoardViewModel extends ChangeNotifier{
     return success;
   }
 
-  Future<void> fetchBoardDetails(int boardId) async {
+  Future<bool> fetchBoardDetails(int boardId) async {
     _clearSelectedBoard();
-    _setLoadingBoards(true);
+    _setLoadingBoardDetails(true);
+
+    bool success = false;
 
     try {
       _selectedBoard = await _detailedBoardUsecase.execute(boardId);
       if (_selectedBoard != null) {
         _boardDetailsError = null; // 성공 시 오류 메시지 초기화
         print('BoardViewModel: 게시글 상세 정보 로드 성공 - ID: $boardId');
+        success = true;
       } else {
         _boardDetailsError = '게시글을 찾을 수 없습니다.';
+        print('BoardViewModel: 게시글 상세 정보 로드 실패 - 서버에서 null 반환');
+        success = false;
       }
     } catch (e) {
       _boardDetailsError = '게시글 상세 정보를 불러오는 중 오류가 발생했습니다.';
       print('BoardViewModel: 게시글 상세 정보 로드 중 오류: $e');
+      success = false;
     } finally {
-      _setLoadingBoards(false);
+      _setLoadingBoardDetails(false);
     }
+    return success;
   }
 
   Future<bool> deleteBoard(int boardId) async {

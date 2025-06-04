@@ -22,10 +22,14 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   late TextEditingController _contentController;
 
   File? _selectedImage;
+  String? _selectedImageUrl;
   DateTime? _selectedDate;
   ItemType? _selectedItemType;
   Location? _selectedLocation;
   String? _selectedStatus;
+
+  bool _isSubmitting = false;
+  bool get isSubmitting => _isSubmitting;
 
   @override
   void initState() {
@@ -64,13 +68,18 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   }
 
   Future<void> _submitBoard() async {
+    if (_isSubmitting) return; // 중복 제출 방지
+
     if (_formKey.currentState!.validate()) {
-      try {
-        final boardViewModel = Provider.of<BoardViewModel>(
-          context,
-          listen: false,
-        );
-        bool success = false;
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      FocusScope.of(context).unfocus();
+      final boardViewModel = Provider.of<BoardViewModel>(context, listen: false,);
+
+      try {  
+        late bool success;
 
         if (widget.lostCategory == 'lost') {
           success = await boardViewModel.postLostBoard(
@@ -78,7 +87,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
             detailedLocation: _detailedLocationController.text,
             description: _contentController.text,
             relatedDate: _selectedDate!,
-            image: _selectedImage,
+            image: '',
             category: widget.lostCategory,
             itemTypeId: _selectedItemType?.id ?? 0,
             locationId: _selectedLocation?.id ?? 0,
@@ -88,19 +97,43 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
             title: _titleController.text,
             detailedLocation: _detailedLocationController.text,
             description: _contentController.text,
-            relatedDate: _selectedDate!,
-            image: _selectedImage,
+            relatedDate: _selectedDate ?? DateTime.now(),
+            image: '',
             category: widget.lostCategory,
             itemTypeId: _selectedItemType?.id ?? 0,
             locationId: _selectedLocation?.id ?? 0,
           );  
         }
 
-        if (mounted) {
-          Navigator.of(context).pop();
+        if (!mounted) {
+          return;
+        } else {
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: 
+              Text('게시글이 성공적으로 등록되었습니다.')),
+            );
+            Navigator.of(context).pop(); // 게시글 등록 후 이전 화면으로 돌아가기
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('게시글 등록에 실패했습니다. 다시 시도해주세요.')),
+            );
+          }
         }
       } catch (e) {
-        // 추후 구현
+        if (!mounted) {
+          return;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('오류 발생: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+          _isSubmitting = false;
+        });
+        }
       }
     }
   }
@@ -146,7 +179,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _submitBoard,
+        onPressed: _isSubmitting ? null : _submitBoard,
         label: Text('제출'),
         icon: Icon(Icons.add),
       ),

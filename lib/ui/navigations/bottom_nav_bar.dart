@@ -28,7 +28,7 @@ class BottomNavBar extends StatelessWidget {
           selectedItemColor: theme.colorScheme.primary,
           selectedLabelStyle: theme.textTheme.labelSmall,
           unselectedLabelStyle: theme.textTheme.labelSmall,
-          type: BottomNavigationBarType.shifting,
+          type: BottomNavigationBarType.fixed,
           enableFeedback: true,
         );
       },

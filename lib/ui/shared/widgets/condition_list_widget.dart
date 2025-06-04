@@ -1,5 +1,4 @@
 import 'package:ajoufinder/domain/entities/condition.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ConditionListWidget extends StatelessWidget {
@@ -96,12 +95,9 @@ class _ConditionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    String locationsDisplay = "전체";
-    if (condition.locations != null && condition.locations!.isNotEmpty) {
-      locationsDisplay = condition.locations!
-          .map((loc) => loc.locationName)
-          .join(', ');
-    }
+    String locationDisplay = condition.location.isNotEmpty
+        ? condition.location
+        : '전체';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -121,9 +117,8 @@ class _ConditionCard extends StatelessWidget {
                 spacing: 8.0,
                 runSpacing: 8.0,
                 children: [
-                  _buildInfoChip(context, CupertinoIcons.checkmark_shield, "상태", condition.status),
-                  _buildInfoChip(context, Icons.shopping_bag_outlined, "종류 ID", condition.itemTypeId.toString()),
-                  _buildInfoChip(context, Icons.place_outlined, "지역", locationsDisplay),
+                  _buildInfoChip(context, Icons.shopping_bag_outlined, "종류 ID", condition.itemType),
+                  _buildInfoChip(context, Icons.place_outlined, "지역", locationDisplay),
                 ],
               ),
             ),

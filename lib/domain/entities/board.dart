@@ -1,6 +1,6 @@
+import 'package:ajoufinder/data/dto/board/board_author.dart';
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
-import 'package:ajoufinder/domain/entities/user.dart';
 
 class Board {
   final int id;
@@ -8,7 +8,7 @@ class Board {
   final String description;
   final String? image;
   final Location location;
-  final User user;
+  final BoardAuthor user;
   final String status;
   final String category;
   final ItemType itemType;
@@ -36,7 +36,7 @@ class Board {
       description: (json['description'] as String?) ?? ' ',
       image: (json['image'] as String?) ?? ' ',
       location: Location.fromJson(json['location'] as Map<String, dynamic>),
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
+      user: BoardAuthor.fromJson(json['user'] as Map<String, dynamic>),
       status: (json['status'] as String?) ?? 'unknown',
       category: (json['category'] as String?) ?? '기타',
       itemType: ItemType.fromJson(json['item_type'] as Map<String, dynamic>),

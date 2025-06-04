@@ -4,7 +4,7 @@ import 'package:ajoufinder/domain/repository/board_repository.dart';
 import 'package:ajoufinder/domain/utils/action_bar_type.dart';
 import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
-import 'package:ajoufinder/ui/shared/widgets/keywords_setting_screen.dart';
+import 'package:ajoufinder/ui/shared/widgets/conditions_setting_screen.dart';
 import 'package:ajoufinder/ui/shared/widgets/post_board_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
@@ -207,7 +207,7 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                           (context) => Center(
                             child: ConstrainedBox(
                               constraints: BoxConstraints(maxWidth: 400),
-                              child: KeywordsSettingScreen(),
+                              child: ConditionsSettingScreen(),
                             ),
                           ),
                     ),
