@@ -16,4 +16,5 @@ abstract class BoardRepository {
   Future<BoardsResponse> getFoundBoards(BoardsRequest request);
   Future<BoardsResponse> getLostBoards(BoardsRequest request);
   Future<DetailedBoardResponse> getBoardById(DetailedBoardRequest request);
+  Future<BoardsResponse> getMyBoards(BoardsRequest request);
 }

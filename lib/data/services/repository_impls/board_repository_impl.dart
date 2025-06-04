@@ -254,4 +254,49 @@ class BoardRepositoryImpl extends BoardRepository{
       throw Exception('게시글 상세 조회 응답 처리 중 오류가 발생했습니다.');
     }
   }
+  
+  @override
+  Future<BoardsResponse> getMyBoards(BoardsRequest request) async {
+    final Map<String, dynamic> queryParams = {};
+
+    if (request.page != null) {
+      queryParams['page'] = request.page.toString();
+    }
+    if (request.size != null) {
+      queryParams['size'] = request.size.toString();
+    }
+
+    final url = Uri.parse('$baseUrl/boards/user').replace(
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    try {
+      final cookie = await _cookieService.getCookie(cookieName);
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Cookie' : '$cookieName=$cookie',
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return BoardsResponse.fromJson(responseBody);
+      } else {
+        print('내 게시글 목록 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('내 게시글 목록 조회 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('내 게시글 목록 API 네트워크 오류 발생: $e');
+      throw Exception('내 게시글 목록 조회 중 네트워크 연결에 실패했습니다.');
+    } on FormatException catch (e) {
+      print('내 게시글 목록 API 응답 형식 오류: $e');
+      throw Exception('내 게시글 목록 응답 형식이 잘못되었습니다.');
+    } catch (e) {
+      print('내 게시글 목록 API 응답 처리 중 예외 발생: $e');
+      throw Exception('내 게시글 목록 응답 처리 중 오류가 발생했습니다.');
+    }
+  }
 }
