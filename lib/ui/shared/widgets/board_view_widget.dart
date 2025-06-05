@@ -347,21 +347,10 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 제목은 AppBar에 있으므로, 여기서는 생략하거나 다른 스타일로 표시
-          // Text(
-          //   board.title,
-          //   style: theme.textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-          // ),
-          // const SizedBox(height: 16),
-
-          // 아이템 정보들을 리스트 형태로 표시
-          if (board.location?.locationName != null)
-             _buildBoardInfoRow(context, Icons.location_on_outlined, '습득/분실 위치', board.location!.locationName),
-          if (board.itemType?.itemType != null)
-            _buildBoardInfoRow(context, Icons.category_outlined, '물품 종류', board.itemType!.itemType),
+          _buildBoardInfoRow(context, Icons.location_on_outlined, '습득/분실 위치', board.location.locationName),
+          _buildBoardInfoRow(context, Icons.category_outlined, '물품 종류', board.itemType.itemType),
           _buildBoardInfoRow(context, Icons.help_outline_rounded, '상태', board.status), // 아이콘 변경
-
-          const SizedBox(height: 20), // 정보와 상세 내용 사이 간격
+          const SizedBox(height: 20),
           Text(
             '상세 내용',
             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),

@@ -13,10 +13,10 @@ class BoardAuthor {
 
   factory BoardAuthor.fromJson(Map<String, dynamic> json) {
     return BoardAuthor(
-      userId: json['user_id'] as int,
+      userId: json['userId'] as int,
       name: json['name'] as String,
       nickname: json['nickname'] as String,
-      profileImage: json['profile_image'] as String?,
+      profileImage: json['profileImage'] as String?,
     );
   }
 

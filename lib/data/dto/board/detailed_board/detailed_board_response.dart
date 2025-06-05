@@ -3,7 +3,7 @@ import 'package:ajoufinder/domain/entities/board.dart';
 class DetailedBoardResponse {
   final String code;
   final String message;
-  final Board? result;
+  final Board result;
   final bool isSuccess;
 
   DetailedBoardResponse({
@@ -17,7 +17,7 @@ class DetailedBoardResponse {
     return DetailedBoardResponse(
       code: json['code'] as String,
       message: json['message'] as String,
-      result: json['result'] != null ? Board.fromJson(json['result'] as Map<String, dynamic>) : null,
+      result: Board.fromJson(json['result'] as Map<String, dynamic>),
       isSuccess: json['isSuccess'] as bool,
     );
   }
@@ -26,7 +26,7 @@ class DetailedBoardResponse {
     return {
       'code': code,
       'message': message,
-      'result': result?.toJson(),
+      'result': result.toJson(),
       'isSuccess': isSuccess,
     };
   }

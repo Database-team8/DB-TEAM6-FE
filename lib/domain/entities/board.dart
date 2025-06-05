@@ -8,6 +8,7 @@ class Board {
   final String description;
   final String? image;
   final Location location;
+  String? detailedLocation;
   final BoardAuthor user;
   final String status;
   final String category;
@@ -20,6 +21,7 @@ class Board {
     required this.title,
     required this.description,
     this.image,
+    this.detailedLocation,
     required this.location,
     required this.user,
     required this.status,
@@ -34,14 +36,15 @@ class Board {
       id: (json['board_id'] as int?) ?? 0,
       title: (json['title'] as String?) ?? '기본 제목',
       description: (json['description'] as String?) ?? ' ',
+      detailedLocation: (json['detailed_location'] as String?) ?? ' ',
       image: (json['image'] as String?) ?? ' ',
       location: Location.fromJson(json['location'] as Map<String, dynamic>),
       user: BoardAuthor.fromJson(json['user'] as Map<String, dynamic>),
       status: (json['status'] as String?) ?? 'unknown',
       category: (json['category'] as String?) ?? '기타',
       itemType: ItemType.fromJson(json['item_type'] as Map<String, dynamic>),
-      createdAt: (json['created_at'] as DateTime?) ?? DateTime.now(),
-      updatedAt: (json['updated_at'] as DateTime?) ?? DateTime.now(),
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
     );
   }
 
