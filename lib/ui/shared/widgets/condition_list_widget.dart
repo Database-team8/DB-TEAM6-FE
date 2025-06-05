@@ -1,15 +1,17 @@
 import 'package:ajoufinder/domain/entities/condition.dart';
+import 'package:ajoufinder/ui/viewmodels/condition_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ConditionListWidget extends StatelessWidget {
-  final List<Condition> conditions;
-
-  const ConditionListWidget({super.key, required this.conditions});
+  const ConditionListWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    final conditionViewModel = context.watch<ConditionViewModel>();
+    final List<Condition> conditions = conditionViewModel.conditions;
+    
     if (conditions.isEmpty) {
       return Center(
         child: Column(
@@ -53,6 +55,21 @@ class _ConditionCard extends StatelessWidget {
   final Condition condition;
 
   const _ConditionCard({super.key, required this.condition});
+
+  Future<void> _deleteCondition(BuildContext context) async {
+    final conditionViewModel = context.read<ConditionViewModel>();
+
+    try {
+      final success = await conditionViewModel.deleteCondition(condition.id);
+      if (success) {
+        print('조건 삭제 성공');
+      } else {
+        return;
+      }
+    } catch (e) {
+      print('Condition 삭제 중 오류 발생 : ${conditionViewModel.deletingError}');
+    } 
+  }
 
   Widget _buildInfoChip(BuildContext context, IconData icon, String label, String value) {
     final theme = Theme.of(context);
@@ -124,11 +141,7 @@ class _ConditionCard extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-              onPressed: () {
-                // TODO: 삭제 확인 다이얼로그 표시 및 삭제 로직 구현
-                print('Delete condition ID: ${condition.id}');
-                // 예: context.read<ConditionViewModel>().deleteCondition(condition.id);
-              },
+              onPressed: () => _deleteCondition(context),
               tooltip: '조건 삭제',
             ),
           ],

@@ -1,7 +1,7 @@
 class PostConditionResponse {
   final String code;
   final String message;
-  final String result;
+  final int result;
   final bool isSuccess;
 
   PostConditionResponse({
@@ -15,7 +15,7 @@ class PostConditionResponse {
     return PostConditionResponse(
       code: json['code'] as String,
       message: json['message'] as String,
-      result: json['result'] as String,
+      result: json['result'] as int,
       isSuccess: json['isSuccess'] as bool,
     );
   }

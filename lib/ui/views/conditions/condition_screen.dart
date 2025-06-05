@@ -79,9 +79,7 @@ class _ConditionScreenState extends State<ConditionScreen> {
     return RefreshIndicator(
       onRefresh: _fetchConditions,
       color: theme.colorScheme.primary,
-      child: ConditionListWidget(
-        conditions: conditionViewModel.conditions,
-      ),
+      child: ConditionListWidget(),
     );
   }
 }

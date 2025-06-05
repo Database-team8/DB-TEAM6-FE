@@ -268,6 +268,7 @@ class BoardViewModel extends ChangeNotifier{
 
       if (result) {
         print('BoardViewModel: 게시글 삭제 성공 - ID: $boardId');
+        // 추후에 fetchboard로 상태갱신할것.
         success = true;
       } else {
         _postError = '게시글 삭제에 실패했습니다.';

@@ -8,6 +8,7 @@ import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dar
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/delete_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/post_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
@@ -76,6 +77,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ConditionViewModel(
           getIt<ConditionsUsecase>(),
           getIt<PostConditionUsecase>(),
+          getIt<DeleteConditionUsecase>(),
         )),
         ChangeNotifierProvider(create: (_) => NavigatorBarViewModel()),
         ChangeNotifierProvider(create: (context) => PageViewModel(

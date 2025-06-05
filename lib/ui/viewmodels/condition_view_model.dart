@@ -1,25 +1,35 @@
 import 'package:ajoufinder/domain/entities/condition.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/delete_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/post_condition_usecase.dart';
 import 'package:flutter/material.dart';
 
 class ConditionViewModel extends ChangeNotifier{
   final ConditionsUsecase _conditionsUsecase;
   final PostConditionUsecase _postConditionUsecase;
+  final DeleteConditionUsecase _deleteConditionUsecase;
 
   List<Condition> _conditions = [];
   bool _isLoading = false;
   bool _isPosting = false;
+  bool _isDeleting = false;
   String? _conditionsError;
   String? _postingError;
+  String? _deletingError;
 
   List<Condition> get conditions => _conditions;
   bool get isLoading => _isLoading;
   bool get isPosting => _isPosting;
+  bool get isDeleting => _isDeleting;
   String? get conditionsError => _conditionsError;
   String? get postingError => _postingError;
+  String? get deletingError => _deletingError;
 
-  ConditionViewModel(this._conditionsUsecase, this._postConditionUsecase) {
+  ConditionViewModel(
+    this._conditionsUsecase, 
+    this._postConditionUsecase,
+    this._deleteConditionUsecase,
+    ) {
     initialize();
   }
 
@@ -37,6 +47,13 @@ class ConditionViewModel extends ChangeNotifier{
   void _setPosting(bool posting) {
     if (_isPosting != posting) {
       _isPosting = posting;
+      notifyListeners();
+    }
+  }
+
+  void _setDeleting(bool deleting) {
+    if (_isDeleting != deleting) {
+      _isDeleting = deleting;
       notifyListeners();
     }
   }
@@ -94,6 +111,32 @@ class ConditionViewModel extends ChangeNotifier{
       return false;
     } finally {
       _setPosting(false);
+    }
+  }
+
+  Future<bool> deleteCondition(int conditionId) async {
+    _setDeleting(true);
+    _deletingError = null;
+
+    try {
+      final result = await _deleteConditionUsecase.execute(conditionId);
+
+      if (result) {
+        print('조건 삭제 성공');
+        await fetchConditions();
+        _deletingError = null;
+        return true;
+      } else {
+        print('조건 삭제 실패');
+        _deletingError = '조건 삭제 실패';
+        return false;
+      }
+    } catch (e) {
+      _deletingError = e.toString();
+      print('조건 등록 중 오류 발생 : $e');
+      return false;
+    } finally {
+      _setDeleting(false);
     }
   }
 }

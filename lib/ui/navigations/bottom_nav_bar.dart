@@ -30,6 +30,7 @@ class BottomNavBar extends StatelessWidget {
           unselectedLabelStyle: theme.textTheme.labelSmall,
           type: BottomNavigationBarType.fixed,
           enableFeedback: true,
+          backgroundColor: theme.colorScheme.surface,
         );
       },
     );

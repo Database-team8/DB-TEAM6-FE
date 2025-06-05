@@ -24,6 +24,7 @@ import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
+import 'package:ajoufinder/domain/usecases/condition/delete_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/post_condition_usecase.dart';
 import 'package:ajoufinder/domain/usecases/user/change_password_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
@@ -126,6 +127,9 @@ Future<void> setUpDependencies() async {
     getIt<ConditionRepository>()
   ));
   getIt.registerFactory<ConditionsUsecase>(() => ConditionsUsecase(
+    getIt<ConditionRepository>()
+  ));
+  getIt.registerFactory<DeleteConditionUsecase>(() => DeleteConditionUsecase(
     getIt<ConditionRepository>()
   ));
 }
