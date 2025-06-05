@@ -13,6 +13,9 @@ class LocationsUsecase {
       if (response.isSuccess) {
         // API 응답이 성공적이면, 결과 리스트(response.result)를 반환합니다.
         print('위치 정보 조회 성공 (Usecase): ${response.result.length}개 항목 수신');
+        for (var loc in response.result) {
+          print('${loc.id} - ${loc.locationName}');
+        }
         return response.result;
       } else {
         // API 응답은 성공(HTTP 200)했으나, 응답 내용상 isSuccess가 false인 경우

@@ -73,12 +73,14 @@ class FilterStateViewModel extends ChangeNotifier{
       notifyListeners();
     }
   }
+
   void setStartDate(DateTime? date) {
     if (_startDate != date) {
       _startDate = date;
       notifyListeners();
     }
   }
+  
   void setEndDate(DateTime? date) {
     if (_endDate != date) {
       _endDate = date;
