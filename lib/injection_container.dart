@@ -15,8 +15,11 @@ import 'package:ajoufinder/domain/repository/location_repository.dart';
 import 'package:ajoufinder/domain/repository/alarm_repository.dart';
 import 'package:ajoufinder/domain/repository/user_repository.dart';
 import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/board_statuses_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
@@ -43,7 +46,6 @@ Future<void> setUpDependencies() async {
   getIt.registerLazySingleton<CookieService>(() => CookieServiceWeb());
   getIt.registerLazySingleton<BoardRepository>(() => BoardRepositoryImpl(
     getIt<http.Client>(), 
-    getIt<CookieService>()
   ));
   getIt.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl());
   getIt.registerLazySingleton<AlarmRepository>(() => AlarmRepositoryImpl(
@@ -64,6 +66,9 @@ Future<void> setUpDependencies() async {
     getIt<CookieService>()
   ));
   getIt.registerFactory<ItemtypesUsecase>(() => ItemtypesUsecase(
+    getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<BoardStatusesUsecase>(() => BoardStatusesUsecase(
     getIt<BoardRepository>()
   ));
   getIt.registerFactory<LogoutUsecase>(() => LogoutUsecase(
@@ -106,6 +111,12 @@ Future<void> setUpDependencies() async {
     getIt<BoardRepository>()
   ));
   getIt.registerFactory<PostFoundBoardUsecase>(() => PostFoundBoardUsecase(
+    getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<FilterLostBoardsUsecase>(() => FilterLostBoardsUsecase(
+    getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<FilterFoundBoardsUsecase>(() => FilterFoundBoardsUsecase(
     getIt<BoardRepository>()
   ));
   getIt.registerFactory<DeleteBoardUsecase>(() => DeleteBoardUsecase(

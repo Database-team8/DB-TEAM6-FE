@@ -1,5 +1,4 @@
 import 'package:ajoufinder/domain/entities/board.dart';
-import 'package:ajoufinder/domain/entities/user.dart';
 import 'package:ajoufinder/ui/shared/widgets/comment_list_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/custom_comment_fab.dart';
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';

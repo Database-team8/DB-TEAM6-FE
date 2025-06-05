@@ -1,35 +1,34 @@
 import 'dart:convert';
 import 'package:ajoufinder/const/network.dart';
+import 'package:ajoufinder/data/dto/board/board_statuses/board_statuses_response.dart';
 import 'package:ajoufinder/data/dto/board/boards/boards_request.dart';
 import 'package:ajoufinder/data/dto/board/boards/boards_response.dart';
-import 'package:ajoufinder/data/dto/board/boards/delete_board/delete_board_request.dart';
-import 'package:ajoufinder/data/dto/board/boards/delete_board/delete_board_response.dart';
+import 'package:ajoufinder/data/dto/board/delete_board/delete_board_request.dart';
+import 'package:ajoufinder/data/dto/board/delete_board/delete_board_response.dart';
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_request.dart';
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_response.dart';
+import 'package:ajoufinder/data/dto/board/filter_boards/filter_board_response.dart';
+import 'package:ajoufinder/data/dto/board/filter_boards/filter_boards_request.dart';
 import 'package:ajoufinder/data/dto/board/post_board/post_board_request.dart';
 import 'package:ajoufinder/data/dto/board/post_board/post_board_response.dart';
 import 'package:ajoufinder/data/dto/itemtype/itemtypes/itemtypes_response.dart';
 import 'package:ajoufinder/domain/entities/board_item.dart';
-import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
 import 'package:ajoufinder/domain/repository/board_repository.dart';
 import 'package:http/http.dart' as http;
 
 class BoardRepositoryImpl extends BoardRepository{
   final http.Client _client;
-  final CookieService _cookieService;
 
-  BoardRepositoryImpl(this._client, this._cookieService);
+  BoardRepositoryImpl(this._client);
 
   @override
   Future<PostBoardResponse> postFoundBoard(PostBoardRequest request) async {
     final url = Uri.parse('$baseUrl/boards/found');
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.post(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
         body: json.encode(request.toJson()),
       );
@@ -56,12 +55,10 @@ class BoardRepositoryImpl extends BoardRepository{
     final url = Uri.parse('$baseUrl/boards/lost');
 
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.post(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
         body: json.encode(request.toJson()),
       );
@@ -118,13 +115,14 @@ class BoardRepositoryImpl extends BoardRepository{
   }
 
   @override
-  Future<List<String>> getAllItemStatuses() async {
+  Future<BoardStatusesResponse> getAllStatuses() async {
     await Future.delayed(Duration(milliseconds: 500));
-    return [
-      '분실',
-      '찾음',
-      '?'
-    ];
+    return BoardStatusesResponse(
+      code: '200',
+      message: '성공',
+      result: ['ACTIVE', 'COMPLETED'],
+      isSuccess: true,
+    );
   }
 
   @override
@@ -149,12 +147,10 @@ class BoardRepositoryImpl extends BoardRepository{
     );
 
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.get(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
       );
 
@@ -194,12 +190,10 @@ class BoardRepositoryImpl extends BoardRepository{
     );
 
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.get(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
       );
 
@@ -228,12 +222,10 @@ class BoardRepositoryImpl extends BoardRepository{
     final url = Uri.parse('$baseUrl/boards/${request.boardId}');
     
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.get(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
       );
 
@@ -273,12 +265,10 @@ class BoardRepositoryImpl extends BoardRepository{
     );
 
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.get(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
       );
 
@@ -307,12 +297,10 @@ class BoardRepositoryImpl extends BoardRepository{
     final url = Uri.parse('$baseUrl/boards/${request.boardId}');
     
     try {
-      final cookie = await _cookieService.getCookie(cookieName);
       final response = await _client.delete(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie' : '$cookieName=$cookie',
         },
       );
 
@@ -333,6 +321,120 @@ class BoardRepositoryImpl extends BoardRepository{
     } catch (e) {
       print('게시글 삭제 API 응답 처리 중 예외 발생: $e');
       throw Exception('게시글 삭제 응답 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  @override
+  Future<FilterBoardResponse> filterFoundBoards(FilterBoardsRequest request) async {
+    final Map<String, dynamic> queryParams = {};
+
+    if (request.page != null) {
+      queryParams['page'] = request.page.toString();
+    }
+    if (request.size != null) {
+      queryParams['size'] = request.size.toString();
+    }
+    if (request.status != null) {
+      queryParams['status'] = request.status;
+    }
+    if (request.itemTypeId != null) {
+      queryParams['item_type_id'] = request.itemTypeId.toString();
+    }
+    if (request.locationId != null) {
+      queryParams['location_id'] = request.locationId.toString();
+    }
+    if (request.startDate != null) {
+      queryParams['start_date'] = request.startDate!.toIso8601String();
+    }
+    if (request.endDate != null) {
+      queryParams['end_date'] = request.endDate!.toIso8601String();
+    }
+
+    final url = Uri.parse('$baseUrl/boards/found/filter').replace(
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    try {
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return FilterBoardResponse.fromJson(responseBody);
+      } else {
+        print('분실 게시글 필터링 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('분실 게시글 필터링 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('분실 게시글 필터링 API 네트워크 오류 발생: $e');
+      throw Exception('분실 게시글 필터링 중 네트워크 연결에 실패했습니다.');
+    } on FormatException catch (e) {
+      print('분실 게시글 필터링 API 응답 형식 오류: $e');
+      throw Exception('분실 게시글 필터링 응답 형식이 잘못되었습니다.');
+    } catch (e) {
+      print('분실 게시글 필터링 API 응답 처리 중 예외 발생: $e');
+      throw Exception('분실 게시글 필터링 응답 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  @override
+  Future<FilterBoardResponse> filterLostBoards(FilterBoardsRequest request) async {
+    final Map<String, dynamic> queryParams = {};
+
+    if (request.page != null) {
+      queryParams['page'] = request.page.toString();
+    }
+    if (request.size != null) {
+      queryParams['size'] = request.size.toString();
+    }
+    if (request.status != null) {
+      queryParams['status'] = request.status;
+    }
+    if (request.itemTypeId != null) {
+      queryParams['item_type_id'] = request.itemTypeId.toString();
+    }
+    if (request.locationId != null) {
+      queryParams['location_id'] = request.locationId.toString();
+    }
+    if (request.startDate != null) {
+      queryParams['start_date'] = request.startDate!.toIso8601String();
+    }
+    if (request.endDate != null) {
+      queryParams['end_date'] = request.endDate!.toIso8601String();
+    }
+
+    final url = Uri.parse('$baseUrl/boards/lost/filter').replace(
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    try {
+      final response = await _client.get(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      final responseBody = json.decode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return FilterBoardResponse.fromJson(responseBody);
+      } else {
+        print('분실 게시글 필터링 API 오류: ${response.statusCode}, 본문: ${response.body}');
+        throw Exception('분실 게시글 필터링 실패 (서버 오류 ${response.statusCode})');
+      }
+    } on http.ClientException catch (e) {
+      print('분실 게시글 필터링 API 네트워크 오류 발생: $e');
+      throw Exception('분실 게시글 필터링 중 네트워크 연결에 실패했습니다.');
+    } on FormatException catch (e) {
+      print('분실 게시글 필터링 API 응답 형식 오류: $e');
+      throw Exception('분실 게시글 필터링 응답 형식이 잘못되었습니다.');
+    } catch (e) {
+      print('분실 게시글 필터링 API 응답 처리 중 예외 발생: $e');
+      throw Exception('분실 게시글 필터링 응답 처리 중 오류가 발생했습니다.');
     }
   }
 }

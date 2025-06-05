@@ -11,6 +11,7 @@ class ItemtypesUsecase {
       final response = await _boardRepository.getAllItemTypes();
 
       if (response.isSuccess) {
+        print('아이템 종류 조회 성공: ${response.result.length}개 아이템 종류 수신');
         return response.result;
       } else {
         // 서버에서 isSuccess: false로 응답한 경우

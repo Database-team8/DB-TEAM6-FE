@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
+import 'package:ajoufinder/ui/shared/widgets/build_generic_dropdown.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:ajoufinder/ui/viewmodels/filter_state_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -76,9 +77,12 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
       });
 
       FocusScope.of(context).unfocus();
-      final boardViewModel = Provider.of<BoardViewModel>(context, listen: false,);
+      final boardViewModel = Provider.of<BoardViewModel>(
+        context,
+        listen: false,
+      );
 
-      try {  
+      try {
         late bool success;
 
         if (widget.lostCategory == 'lost') {
@@ -102,17 +106,16 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
             category: widget.lostCategory.toUpperCase(),
             itemTypeId: _selectedItemType?.id ?? 0,
             locationId: _selectedLocation?.id ?? 0,
-          );  
+          );
         }
 
         if (!mounted) {
           return;
         } else {
           if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: 
-              Text('게시글이 성공적으로 등록되었습니다.')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('게시글이 성공적으로 등록되었습니다.')));
             Navigator.of(context).pop(); // 게시글 등록 후 이전 화면으로 돌아가기
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -124,15 +127,15 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         if (!mounted) {
           return;
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류 발생: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('오류 발생: $e')));
         }
       } finally {
         if (mounted) {
           setState(() {
-          _isSubmitting = false;
-        });
+            _isSubmitting = false;
+          });
         }
       }
     }
@@ -141,7 +144,7 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final boardViewModel = Provider.of<BoardViewModel>(context);
+    final filterStateViewModel = Provider.of<FilterStateViewModel>(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -162,13 +165,55 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
               const SizedBox(height: 20),
               _buildTitleTextField(),
               const SizedBox(height: 16),
-              _buildLocationDropdown(boardViewModel),
+              buildGenericDropdown<Location>(
+                hintText: '위치',
+                selectedValue: _selectedLocation,
+                items: filterStateViewModel.availableLocations,
+                isLoading: filterStateViewModel.isLoadingLocations,
+                error: filterStateViewModel.locationsError,
+                emptyText: '위치 정보 없음',
+                labelBuilder: (loc) => loc.locationName,
+                theme: theme,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedLocation = newValue;
+                  });
+                },
+              ),
               const SizedBox(height: 16),
               _buildDetailedLocationTextField(),
               const SizedBox(height: 16),
-              _buildItemTypeDropdown(boardViewModel),
+              buildGenericDropdown<ItemType>(
+                hintText: '종류',
+                selectedValue: _selectedItemType,
+                items: filterStateViewModel.availableItemTypes,
+                isLoading: filterStateViewModel.isLoadingItemTypes,
+                error: filterStateViewModel.itemTypesError,
+                emptyText: '종류 정보 없음',
+                labelBuilder: (itemType) => itemType.itemType,
+                theme: theme,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedItemType = newValue;
+                  });
+                },
+              ),
               const SizedBox(height: 16),
-              _buildStatusDropdown(),
+              buildGenericDropdown<String>(
+                hintText: '상태',
+                selectedValue: _selectedStatus,
+                items: filterStateViewModel.availableStatuses,
+                isLoading: filterStateViewModel.isLoadingStatuses,
+                error: filterStateViewModel.statusesError,
+                emptyText: '상태 정보 없음',
+                labelBuilder: (status) => status,
+                theme: theme,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedStatus = newValue;
+                  });
+                },
+              ),
               const SizedBox(height: 16),
               _buildDatePicker(),
               const SizedBox(height: 16),
@@ -248,112 +293,6 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
     );
   }
 
-  Widget _buildLocationDropdown(BoardViewModel boardViewModel) {
-    final theme = Theme.of(context);
-    final lineColor = theme.colorScheme.onSurfaceVariant;
-
-    if (boardViewModel.isLoadingLocations) {
-      return SizedBox(
-        width: 100,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-    if (boardViewModel.locationError != null) {
-      return Text('위치 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
-    }
-    if (boardViewModel.locations.isEmpty) {
-      return Text('위치 정보 없음');
-    }
-    final locations = boardViewModel.locations;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: lineColor, width: 1.0), // 테두리 두께 조정
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow,
-            blurRadius: 2.0,
-            offset: Offset(0, 1),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(16.0), // 반지름 조정
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<Location>(
-            icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
-            hint: Text(
-              '위치',
-              style: theme.textTheme.labelMedium!.copyWith(color: lineColor),
-            ),
-            value: _selectedLocation,
-            items:
-                locations.map((Location location) {
-                  return DropdownMenuItem<Location>(
-                    value: location,
-                    child: Text(
-                      location.locationName,
-                      style: theme.textTheme.labelMedium!.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  );
-                }).toList(),
-            onChanged: (Location? newValue) {
-              setState(() {
-                _selectedLocation = newValue;
-              });
-            },
-            isDense: true,
-            dropdownColor: theme.colorScheme.surface,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusDropdown() {
-    final theme = Theme.of(context);
-
-    final List<Map<String, String>> statusOptions = [
-      {'value': 'lost', 'label': '분실'},
-      {'value': 'found', 'label': '습득'},
-    ];
-    _selectedStatus = widget.lostCategory;
-
-    return DropdownButtonFormField<String>(
-      value: _selectedStatus,
-      decoration: InputDecoration(
-        border: InputBorder.none,
-        prefixIcon: Icon(CupertinoIcons.checkmark_shield),
-      ),
-      isExpanded: true,
-      items:
-          statusOptions
-              .map(
-                (status) => DropdownMenuItem<String>(
-                  value: status['value'],
-                  child: Text(status['label']!),
-                ),
-              )
-              .toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedStatus = value;
-        });
-      },
-      validator:
-          (value) => value == null || value.isEmpty ? '상태를 선택해주세요.' : null,
-    );
-  }
-
   Widget _buildDetailedLocationTextField() {
     final theme = Theme.of(context);
     return TextFormField(
@@ -365,77 +304,6 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         prefixIcon: Icon(
           Icons.place_outlined,
           color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemTypeDropdown(BoardViewModel boardViewModel) {
-    final theme = Theme.of(context);
-    final lineColor = theme.colorScheme.onSurfaceVariant;
-
-    if (boardViewModel.isLoadingItemTypes) {
-      return SizedBox(
-        width: 100,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-    if (boardViewModel.itemTypeError != null) {
-      return Text('종류 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
-    }
-    if (boardViewModel.itemTypes.isEmpty) {
-      return Text('종류 정보 없음');
-    }
-    final itemTypes = boardViewModel.itemTypes;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: lineColor, width: 1.0),
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow,
-            blurRadius: 2.0,
-            offset: Offset(0, 1),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<ItemType>(
-            icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
-            hint: Text(
-              '종류',
-              style: theme.textTheme.labelMedium!.copyWith(color: lineColor),
-            ),
-            value: _selectedItemType,
-            items:
-                itemTypes.map((ItemType type) {
-                  return DropdownMenuItem<ItemType>(
-                    value: type,
-                    child: Text(
-                      type.itemType,
-                      style: theme.textTheme.labelMedium!.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  );
-                }).toList(),
-            onChanged: (ItemType? newValue) {
-              setState(() {
-                _selectedItemType = newValue;
-              });
-            },
-            isDense: true,
-            dropdownColor: theme.colorScheme.surface,
-          ),
         ),
       ),
     );
@@ -461,7 +329,6 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   }
 
   Widget _buildContentTextField() {
-    final theme = Theme.of(context);
     return TextFormField(
       controller: _contentController,
       decoration: const InputDecoration(

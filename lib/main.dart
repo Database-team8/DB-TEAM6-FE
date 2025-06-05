@@ -1,8 +1,10 @@
-import 'dart:ui';
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
 import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/board_statuses_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
@@ -25,6 +27,7 @@ import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/condition_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/filter_state_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
 import 'package:provider/provider.dart';
@@ -39,6 +42,11 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => FilterStateViewModel(
+            getIt<LocationsUsecase>(),
+            getIt<ItemtypesUsecase>(),
+            getIt<BoardStatusesUsecase>(),
+        )),
         ChangeNotifierProvider(create: (_)  => AuthViewModel(
             getIt<CookieService>(),
             getIt<LogoutUsecase>(),
@@ -49,8 +57,6 @@ void main() async {
           ),
         ),  
         ChangeNotifierProvider(create: (_) => BoardViewModel(
-          getIt<ItemtypesUsecase>(),
-          getIt<LocationsUsecase>(),
           getIt<MyBoardsUsecase>(),
           getIt<LostBoardsUsecase>(),
           getIt<FoundBoardsUsecase>(),
@@ -58,6 +64,8 @@ void main() async {
           getIt<PostLostBoardUsecase>(),
           getIt<PostFoundBoardUsecase>(),
           getIt<DeleteBoardUsecase>(),
+          getIt<FilterLostBoardsUsecase>(),
+          getIt<FilterFoundBoardsUsecase>(),
         )),  
         ChangeNotifierProvider(create: (_) => CommentViewModel(
           getIt<MyCommentsUsecase>(),

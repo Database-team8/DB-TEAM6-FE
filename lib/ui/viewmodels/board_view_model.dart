@@ -1,21 +1,17 @@
 import 'package:ajoufinder/domain/entities/board.dart';
 import 'package:ajoufinder/domain/entities/board_item.dart';
-import 'package:ajoufinder/domain/entities/item_type.dart';
-import 'package:ajoufinder/domain/entities/location.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
-import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
-import 'package:ajoufinder/domain/usecases/location/locations_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
 import 'package:flutter/material.dart';
 
 class BoardViewModel extends ChangeNotifier{
-  final ItemtypesUsecase _itemtypesUsecase;
-  final LocationsUsecase _locationsUsecase;
   final MyBoardsUsecase _myBoardsUsecase;
   final LostBoardsUsecase _lostBoardsUsecase;
   final FoundBoardsUsecase _foundBoardsUsecase;
@@ -23,14 +19,12 @@ class BoardViewModel extends ChangeNotifier{
   final PostLostBoardUsecase _postLostBoardUseCase;
   final PostFoundBoardUsecase _postFoundBoardUseCase;
   final DeleteBoardUsecase _deleteBoardUsecase;
+  final FilterLostBoardsUsecase _filterLostBoardsUsecase;
+  final FilterFoundBoardsUsecase _filterFoundBoardsUsecase;
 
   List<BoardItem> _boardItems = [];
   Board? _selectedBoard;
-  List<ItemType> _itemTypes = [];
-  List<Location> _locations = [];
   bool _isLoadingBoardItems = false;
-  bool _isLoadingItemTypes = false;
-  bool _isLoadingLocations = false;
   bool _isLoadingBoardDetails = false;
   bool _isPosting = false;
   String? _boardError;
@@ -41,11 +35,7 @@ class BoardViewModel extends ChangeNotifier{
 
   List<BoardItem> get boards => _boardItems;
   Board? get selectedBoard => _selectedBoard;
-  List<ItemType> get itemTypes => _itemTypes;
-  List<Location> get locations => _locations;
   bool get isLoadingBoardItems => _isLoadingBoardItems;
-  bool get isLoadingItemTypes => _isLoadingItemTypes;
-  bool get isLoadingLocations => _isLoadingLocations;
   bool get isLoadingBoardDetails => _isLoadingBoardDetails;
   bool get isPosting => _isPosting;
   String? get boardError => _boardError;
@@ -54,11 +44,9 @@ class BoardViewModel extends ChangeNotifier{
   String? get boardDetailsError => _boardDetailsError;
   String? get postError => _postError;
 
-  bool get isLoading => _isLoadingBoardItems || _isLoadingItemTypes || _isLoadingLocations || _isLoadingBoardDetails;
+  bool get isLoading => _isLoadingBoardItems || _isLoadingBoardDetails;
 
   BoardViewModel(
-    this._itemtypesUsecase, 
-    this._locationsUsecase, 
     this._myBoardsUsecase,
     this._lostBoardsUsecase,
     this._foundBoardsUsecase,
@@ -66,32 +54,18 @@ class BoardViewModel extends ChangeNotifier{
     this._postLostBoardUseCase,
     this._postFoundBoardUseCase,
     this._deleteBoardUsecase,
+    this._filterLostBoardsUsecase,
+    this._filterFoundBoardsUsecase,
     ) {
     initialize();
   }
 
   void initialize() async {
-    await fetchItemTypes();
-    await fetchLocations();
   }
 
   void _setLoadingBoards(bool loading) {
     if (_isLoadingBoardItems != loading) {
       _isLoadingBoardItems = loading;
-      notifyListeners();
-    }
-  }
-
-  void _setLoadingItemTypes(bool loading) {
-    if (_isLoadingItemTypes != loading) {
-      _isLoadingItemTypes = loading;
-      notifyListeners();
-    }
-  }
-
-  void _setLoadingLocations(bool loading) {
-    if (_isLoadingLocations != loading) {
-      _isLoadingLocations = loading;
       notifyListeners();
     }
   }
@@ -120,37 +94,9 @@ class BoardViewModel extends ChangeNotifier{
     _boardError = null;
   }
 
-  void _clearItemTypes() {
-    _itemTypes = [];
-    _itemTypeError = null;
-  }
-
-  void _clearLocations() {
-    _locations = [];
-    _locationError = null;
-  }
-
   void clearBoardDetails() {
     _clearSelectedBoard();
     _boardDetailsError = null;
-  }
-
-  Future<void> fetchItemTypes() async {
-    _clearItemTypes();
-    _setLoadingItemTypes(true);
-
-    try {
-      final fetchedItemTypes = await _itemtypesUsecase.execute();
-      _itemTypes = fetchedItemTypes;
-      _itemTypeError = null; // 성공 시 오류 메시지 초기화
-      print('BoardViewModel: 아이템 타입 목록 로드 성공 - ${fetchedItemTypes.length}개');
-    } catch (e) {
-      _itemTypes = []; // 실패 시 빈 리스트로 설정
-      _itemTypeError = '아이템 종류를 불러오는 중 오류가 발생했습니다.';
-      print('BoardViewModel: 아이템 타입 목록 로드 중 오류: $e');
-    } finally {
-      _setLoadingItemTypes(false);
-    }
   }
 
   Future<void> fetchCategoricalBoardItems(String category) async {
@@ -189,24 +135,6 @@ class BoardViewModel extends ChangeNotifier{
       print('BoardViewModel: 내 게시글 목록 로드 중 오류: $e');
     } finally {
       _setLoadingBoards(false);
-    }
-  }
-
-  Future<void> fetchLocations() async {
-    _clearLocations();
-    _setLoadingLocations(true);
-
-    try {
-      final fetchedLocations = await _locationsUsecase.execute();
-      _locations = fetchedLocations;
-      _locationError = null; // 성공 시 오류 메시지 초기화
-      print('BoardViewModel: 위치 목록 로드 성공 - ${_locations.length}개');
-    } catch (e) {
-      _locations = []; // 실패 시 빈 리스트로 설정
-      _locationError = '위치를 불러오는 중 오류가 발생했습니다.';
-      print('BoardViewModel: 위치 목록 로드 중 오류: $e');
-    } finally {
-      _setLoadingLocations(false);
     }
   }
 
@@ -352,5 +280,64 @@ class BoardViewModel extends ChangeNotifier{
       _setPosting(false);
     }
     return success;
+  }
+
+  Future<void> fetchFilteredLostBoards({
+    String? status,
+    int? itemTypeId,
+    int? locationId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    _clearBoards();
+    _setLoadingBoards(true);
+
+    try {
+      final filteredBoards = await _filterLostBoardsUsecase.execute(
+        status: status,
+        itemTypeId: itemTypeId,
+        locationId: locationId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+      _boardItems = filteredBoards;
+      _boardError = null; // 성공 시 오류 메시지 초기화
+      print('BoardViewModel: 필터링된 분실 게시글 목록 로드 성공 - ${filteredBoards.length}개');
+    } catch (e) {
+      _boardItems = []; // 실패 시 빈 리스트로 설정
+      _boardError = '분실 게시글을 필터링하는 중 오류가 발생했습니다.';
+      print('BoardViewModel: 분실 게시글 필터링 중 오류: $e');
+    } finally {
+      _setLoadingBoards(false);
+    }
+  }
+  Future<void> fetchFilteredFoundBoards({
+    String? status,
+    int? itemTypeId,
+    int? locationId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    _clearBoards();
+    _setLoadingBoards(true);
+
+    try {
+      final filteredBoards = await _filterFoundBoardsUsecase.execute(
+        status: status,
+        itemTypeId: itemTypeId,
+        locationId: locationId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+      _boardItems = filteredBoards;
+      _boardError = null; // 성공 시 오류 메시지 초기화
+      print('BoardViewModel: 필터링된 습득 게시글 목록 로드 성공 - ${filteredBoards.length}개');
+    } catch (e) {
+      _boardItems = []; // 실패 시 빈 리스트로 설정
+      _boardError = '습득 게시글을 필터링하는 중 오류가 발생했습니다.';
+      print('BoardViewModel: 습득 게시글 필터링 중 오류: $e');
+    } finally {
+      _setLoadingBoards(false);
+    }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
-import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/condition_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/filter_state_view_model.dart';
 import 'package:ajoufinder/ui/views/conditions/condition_screen.dart';
 import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';
 import 'package:flutter/material.dart';
@@ -28,20 +28,20 @@ class _ConditionsSettingScreenState extends State<ConditionsSettingScreen> {
   }
 
   Future<void> _loadInitialData() async {
-    final boardViewModel = context.read<BoardViewModel>();
+    final filterStateViewModel = context.read<FilterStateViewModel>();
 
     await Future.wait([
-      boardViewModel.fetchLocations(),
-      boardViewModel.fetchItemTypes(),
+      filterStateViewModel.fetchLocations(),
+      filterStateViewModel.fetchItemTypes(),
     ]);
 
     if (mounted) {
       setState(() {
-        if (boardViewModel.locations.isNotEmpty) {
-          _selectedLocation = boardViewModel.locations[0];
+        if (filterStateViewModel.availableLocations.isNotEmpty) {
+          _selectedLocation = filterStateViewModel.availableLocations[0];
         }
-        if (boardViewModel.itemTypes.isNotEmpty) {
-          _selectedItemType = boardViewModel.itemTypes[0];
+        if (filterStateViewModel.availableItemTypes.isNotEmpty) {
+          _selectedItemType = filterStateViewModel.availableItemTypes[0];
         }
       });
     } else {
@@ -130,20 +130,20 @@ class _ConditionsSettingScreenState extends State<ConditionsSettingScreen> {
   }
 
   Widget _buildBody() {
-    final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
+    final filterStateViewModel = Provider.of<FilterStateViewModel>(context, listen: false);
     final theme = Theme.of(context);
 
-    if (boardViewModel.isLoadingLocations ||
-        boardViewModel.isLoadingItemTypes) {
+    if (filterStateViewModel.isLoadingLocations ||
+        filterStateViewModel.isLoadingItemTypes) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final itemTypeError = boardViewModel.itemTypeError;
-    if (boardViewModel.locationError != null ||
-        boardViewModel.itemTypeError != null) {
+    final itemTypeError = filterStateViewModel.itemTypesError;
+    if (filterStateViewModel.locationsError != null ||
+        filterStateViewModel.itemTypesError != null) {
       final displayError =
-          boardViewModel.locationError ??
-          boardViewModel.itemTypeError ??
+          filterStateViewModel.locationsError ??
+          filterStateViewModel.itemTypesError ??
           '알 수 없는 오류';
       return Center(
         child: Column(
@@ -155,8 +155,8 @@ class _ConditionsSettingScreenState extends State<ConditionsSettingScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                if (boardViewModel.locationError != null) boardViewModel.fetchLocations();
-                if (itemTypeError != null) boardViewModel.fetchItemTypes();
+                if (filterStateViewModel.locationsError != null) filterStateViewModel.fetchLocations();
+                if (itemTypeError != null) filterStateViewModel.fetchItemTypes();
               },
               child: const Text('다시 시도'),
             ),
@@ -172,7 +172,7 @@ class _ConditionsSettingScreenState extends State<ConditionsSettingScreen> {
         children: [
           _buildConditionSection<Location>(
             '관심 지역',
-            boardViewModel.locations,
+            filterStateViewModel.availableLocations,
             _selectedLocation,
             (selected) => setState(() {
               _selectedLocation = selected.isNotEmpty ? selected[0] : null;
@@ -181,7 +181,7 @@ class _ConditionsSettingScreenState extends State<ConditionsSettingScreen> {
           const SizedBox(height: 24),
           _buildConditionSection<ItemType>(
             '물품 종류',
-            boardViewModel.itemTypes,
+            filterStateViewModel.availableItemTypes,
             _selectedItemType,
             (selected) => setState(() {
               _selectedItemType = selected.isNotEmpty ? selected[0] : null;

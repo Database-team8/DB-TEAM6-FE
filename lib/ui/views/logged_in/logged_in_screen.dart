@@ -1,14 +1,14 @@
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
-import 'package:ajoufinder/domain/repository/board_repository.dart';
 import 'package:ajoufinder/domain/utils/action_bar_type.dart';
-import 'package:ajoufinder/injection_container.dart';
 import 'package:ajoufinder/ui/navigations/bottom_nav_bar.dart';
+import 'package:ajoufinder/ui/shared/widgets/build_generic_dropdown.dart';
 import 'package:ajoufinder/ui/shared/widgets/conditions_setting_screen.dart';
 import 'package:ajoufinder/ui/shared/widgets/post_board_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/search_bar_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/filter_state_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/page_view_model.dart';
 import 'package:ajoufinder/ui/views/alarms/alarm_screen.dart';
@@ -24,11 +24,6 @@ class LoggedInScreen extends StatefulWidget {
 }
 
 class _LoggedInScreenState extends State<LoggedInScreen> {
-  Location? _selectedLocation;
-  ItemType? _selectedItemType;
-  String? _selectedStatus;
-
-  late Future<List<String>> _statusesFuture;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -41,14 +36,9 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     });
   }
 
-  Future<List<String>> _fetchStatuses() async {
-    return getIt<BoardRepository>().getAllItemStatuses();
-  }
-
   @override
   void initState() {
     super.initState();
-    _statusesFuture = _fetchStatuses();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(
@@ -61,14 +51,72 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     });
   }
 
-  void _sendQuery() {}
+  Future<void> _sendQuery() async {
+    final filterStateViewModel = context.read<FilterStateViewModel>();
+
+    if (filterStateViewModel.selectedLocation == null &&
+        filterStateViewModel.selectedItemType == null &&
+        filterStateViewModel.selectedStatus == null &&
+        filterStateViewModel.startDate == null &&
+        filterStateViewModel.endDate == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('적어도 하나의 필터를 선택해야 합니다.')));
+      }
+      return;
+    }
+
+    if (filterStateViewModel.startDate != null &&
+        filterStateViewModel.endDate != null &&
+        filterStateViewModel.startDate!.isAfter(filterStateViewModel.endDate!)) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('시작 날짜는 종료 날짜보다 이전이어야 합니다.')));
+      }
+      return;
+    }
+
+    final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
+    final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(
+      context,
+      listen: false,
+    );
+
+    try {
+      if (navigatorBarViewModel.currentIndex == 0) {
+        await boardViewModel.fetchFilteredLostBoards(
+          locationId: filterStateViewModel.selectedLocation?.id,
+          itemTypeId: filterStateViewModel.selectedItemType?.id,
+          status: filterStateViewModel.selectedStatus,
+          startDate: filterStateViewModel.startDate,
+          endDate: filterStateViewModel.endDate,
+        );
+      } else if (navigatorBarViewModel.currentIndex == 1) {
+        await boardViewModel.fetchFilteredFoundBoards(
+          locationId: filterStateViewModel.selectedLocation?.id,
+          itemTypeId: filterStateViewModel.selectedItemType?.id,
+          status: filterStateViewModel.selectedStatus,
+          startDate: filterStateViewModel.startDate,
+          endDate: filterStateViewModel.endDate,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('게시글 필터링 중 오류 발생: $e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(context);
-    final boardViewModel = context.watch<BoardViewModel>();
     final pageViewModel = context.watch<PageViewModel>();
+    final filterStateViewModel = context.watch<FilterStateViewModel>();
 
     return Scaffold(
       appBar: PreferredSize(
@@ -102,11 +150,63 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  _buildLocationDropdown(boardViewModel),
+                                  buildGenericDropdown<Location>(
+                                    hintText: '위치',
+                                    selectedValue: filterStateViewModel.selectedLocation,
+                                    items:
+                                        filterStateViewModel.availableLocations,
+                                    isLoading:
+                                        filterStateViewModel.isLoadingLocations,
+                                    error: filterStateViewModel.locationsError,
+                                    emptyText: '위치 정보 없음',
+                                    labelBuilder: (loc) => loc.locationName,
+                                    onChanged: (newValue) => filterStateViewModel.setSelectedLocation(newValue),
+                                    onChangedAsync: _sendQuery,
+                                    theme: theme,
+                                  ),
+
                                   const SizedBox(width: 8),
-                                  _buildItemTypeDropdown(boardViewModel),
+                                  buildGenericDropdown<ItemType>(
+                                    hintText: '종류',
+                                    selectedValue: filterStateViewModel.selectedItemType,
+                                    items:
+                                        filterStateViewModel.availableItemTypes,
+                                    isLoading:
+                                        filterStateViewModel.isLoadingItemTypes,
+                                    error: filterStateViewModel.itemTypesError,
+                                    emptyText: '종류 정보 없음',
+                                    labelBuilder: (type) => type.itemType,
+                                    onChanged: (newValue) => filterStateViewModel.setSelectedItemType(newValue),
+                                    onChangedAsync: _sendQuery,
+                                    theme: theme,
+                                  ),
+
                                   const SizedBox(width: 8),
-                                  _buildStatusDropdown(),
+                                  buildGenericDropdown<String>(
+                                    hintText: '상태',
+                                    selectedValue: filterStateViewModel.selectedStatus,
+                                    items: filterStateViewModel.availableStatuses,
+                                    isLoading: filterStateViewModel.isLoadingStatuses,
+                                    error: filterStateViewModel.statusesError,
+                                    emptyText: '상태 정보 없음',
+                                    labelBuilder: (status) => status,
+                                    onChanged: (newValue) => filterStateViewModel.setSelectedStatus(newValue),
+                                    onChangedAsync: _sendQuery,
+                                    theme: theme,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildDatePickerButton(
+                                    label: '시작',
+                                    date: filterStateViewModel.startDate,
+                                    onPressed: _selectFirstDate,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildDatePickerButton(
+                                    label: '끝',
+                                    date: filterStateViewModel.endDate,
+                                    onPressed: _selectEndDate,
+                                  ),
+                                  const SizedBox(width: 8),
                                 ],
                               ),
                             ),
@@ -227,228 +327,68 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     return actions;
   }
 
-  Widget _buildLocationDropdown(BoardViewModel boardViewModel) {
-    final theme = Theme.of(context);
-    final lineColor = theme.colorScheme.onSurfaceVariant;
-
-    if (boardViewModel.isLoadingLocations) {
-      return SizedBox(
-        width: 100,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-    if (boardViewModel.locationError != null) {
-      return Text('위치 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
-    }
-    if (boardViewModel.locations.isEmpty) {
-      return Text('위치 정보 없음');
-    }
-    final locations = boardViewModel.locations;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: lineColor, width: 1.0), // 테두리 두께 조정
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow,
-            blurRadius: 2.0,
-            offset: Offset(0, 1),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(16.0), // 반지름 조정
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<Location>(
-            icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
-            hint: Text(
-              '위치',
-              style: theme.textTheme.labelMedium!.copyWith(color: lineColor),
-            ),
-            value: _selectedLocation,
-            items:
-                locations.map((Location location) {
-                  return DropdownMenuItem<Location>(
-                    value: location,
-                    child: Text(
-                      location.locationName,
-                      style: theme.textTheme.labelMedium!.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  );
-                }).toList(),
-            onChanged: (Location? newValue) {
-              setState(() {
-                _selectedLocation = newValue;
-              });
-              _sendQuery();
-            },
-            isDense: true,
-            dropdownColor: theme.colorScheme.surface,
-          ),
-        ),
-      ),
+  Future<void> _selectFirstDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: context.read<FilterStateViewModel>().startDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025).add(const Duration(days: 365)),
     );
+    if (mounted) {
+      final filterStateViewModel = context.read<FilterStateViewModel>();
+
+      if (picked != null && picked != filterStateViewModel.startDate) {
+      filterStateViewModel.setStartDate(picked);
+      await _sendQuery();
+    }
+    } else {
+      return;
+    }    
   }
 
-  Widget _buildItemTypeDropdown(BoardViewModel boardViewModel) {
-    final theme = Theme.of(context);
-    final lineColor = theme.colorScheme.onSurfaceVariant;
-
-    if (boardViewModel.isLoadingItemTypes) {
-      return SizedBox(
-        width: 100,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-    if (boardViewModel.itemTypeError != null) {
-      return Text('종류 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
-    }
-    if (boardViewModel.itemTypes.isEmpty) {
-      return Text('종류 정보 없음');
-    }
-    final itemTypes = boardViewModel.itemTypes;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: lineColor, width: 1.0),
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow,
-            blurRadius: 2.0,
-            offset: Offset(0, 1),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<ItemType>(
-            icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
-            hint: Text(
-              '종류',
-              style: theme.textTheme.labelMedium!.copyWith(color: lineColor),
-            ),
-            value: _selectedItemType,
-            items:
-                itemTypes.map((ItemType type) {
-                  return DropdownMenuItem<ItemType>(
-                    value: type,
-                    child: Text(
-                      type.itemType,
-                      style: theme.textTheme.labelMedium!.copyWith(
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  );
-                }).toList(),
-            onChanged: (ItemType? newValue) {
-              setState(() {
-                _selectedItemType = newValue;
-              });
-              _sendQuery();
-            },
-            isDense: true,
-            dropdownColor: theme.colorScheme.surface,
-          ),
-        ),
-      ),
+  Future<void> _selectEndDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: context.read<FilterStateViewModel>().endDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025).add(const Duration(days: 365)),
     );
+    if (mounted) {
+      final filterStateViewModel = context.read<FilterStateViewModel>();
+
+      if (picked != null && picked != filterStateViewModel.endDate) {
+      filterStateViewModel.setEndDate(picked);
+      await _sendQuery();
+    }
+    } else {
+      return;
+    }    
   }
 
-  Widget _buildStatusDropdown() {
-    return FutureBuilder<List<String>>(
-      future: _statusesFuture,
-      builder: (context, snapshot) {
-        final theme = Theme.of(context);
-        final lineColor = theme.colorScheme.onSurfaceVariant;
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SizedBox(
-            width: 120,
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
-        }
-        if (snapshot.hasError) {
-          return Text('상태 로딩 실패');
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Text('상태 정보 없음');
-        }
-        final statuses = snapshot.data!;
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: lineColor, width: 1.5),
-            color: theme.colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.shadow,
-                blurRadius: 4.0,
-                offset: Offset(0, 2),
-              ),
-            ],
-            borderRadius: BorderRadius.circular(20.0),
+  Widget _buildDatePickerButton({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onPressed,
+  }) {
+    final theme = Theme.of(context);
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+          side: BorderSide(
+            color: theme.colorScheme.onSurfaceVariant,
+            width: 1.5,
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                icon: Icon(Icons.keyboard_arrow_down_rounded, color: lineColor),
-                hint: Text(
-                  '상태',
-                  style: theme.textTheme.labelLarge!.copyWith(color: lineColor),
-                ),
-                value: _selectedStatus,
-                items:
-                    statuses.map((String status) {
-                      return DropdownMenuItem<String>(
-                        value: status,
-                        child: Text(
-                          status,
-                          style: theme.textTheme.labelLarge!.copyWith(
-                            color: lineColor,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedStatus = newValue;
-                  });
-                  _sendQuery(); // 선택 변경 시 쿼리
-                },
-                underline: Container(),
-                isDense: true,
-                dropdownColor: theme.colorScheme.surface,
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
+      child: Text(
+        date != null ? '${date.year}-${date.month}-${date.day}' : label,
+        style: theme.textTheme.labelLarge!.copyWith(
+          color: theme.colorScheme.onSurface,
+        ),
+      ),
     );
   }
 }

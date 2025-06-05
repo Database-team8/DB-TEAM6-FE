@@ -1,4 +1,4 @@
-import 'package:ajoufinder/data/dto/board/boards/delete_board/delete_board_request.dart';
+import 'package:ajoufinder/data/dto/board/delete_board/delete_board_request.dart';
 import 'package:ajoufinder/domain/repository/board_repository.dart';
 
 class DeleteBoardUsecase {

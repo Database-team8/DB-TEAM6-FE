@@ -1,5 +1,4 @@
 import 'package:ajoufinder/ui/shared/widgets/board_list_widget.dart';
-import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
