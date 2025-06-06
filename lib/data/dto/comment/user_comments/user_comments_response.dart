@@ -2,7 +2,6 @@ class UserComment {
   final int commentId;
   final int? parentId;
   final int boardId;
-  final int userId;
   final String relatedContent;
   final String content;
   final bool isSecret;
@@ -11,9 +10,8 @@ class UserComment {
 
   UserComment({
     required this.commentId,
-    required this.parentId,
+    this.parentId,
     required this.boardId,
-    required this.userId,
     required this.relatedContent,
     required this.content,
     required this.isSecret,
@@ -26,7 +24,6 @@ class UserComment {
       commentId: json['comment_id'],
       parentId: json['parent_id'],
       boardId: json['board_id'],
-      userId: json['user'],
       relatedContent: json['related_content'],
       content: json['content'],
       isSecret: json['is_secret'],
@@ -40,7 +37,6 @@ class UserComment {
       'comment_id': commentId,
       'parent_id': parentId,
       'board_id': boardId,
-      'user_id': userId,
       'related_content': relatedContent,
       'content': content,
       'is_secret': isSecret,
@@ -50,13 +46,75 @@ class UserComment {
   }
 }
 
+class Sort {
+  final bool empty;
+  final bool sorted;
+  final bool unsorted;
+
+  Sort({required this.empty, required this.sorted, required this.unsorted});
+
+  factory Sort.fromJson(Map<String, dynamic> json) {
+    return Sort(
+      empty: json['empty'],
+      sorted: json['sorted'],
+      unsorted: json['unsorted'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'empty': empty,
+    'sorted': sorted,
+    'unsorted': unsorted,
+  };
+}
+
+class Pageable {
+  final int offset;
+  final Sort sort;
+  final bool paged;
+  final int pageNumber;
+  final int pageSize;
+  final bool unpaged;
+
+  Pageable({
+    required this.offset,
+    required this.sort,
+    required this.paged,
+    required this.pageNumber,
+    required this.pageSize,
+    required this.unpaged,
+  });
+
+  factory Pageable.fromJson(Map<String, dynamic> json) {
+    return Pageable(
+      offset: json['offset'],
+      sort: Sort.fromJson(json['sort']),
+      paged: json['paged'],
+      pageNumber: json['pageNumber'],
+      pageSize: json['pageSize'],
+      unpaged: json['unpaged'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'offset': offset,
+    'sort': sort.toJson(),
+    'paged': paged,
+    'pageNumber': pageNumber,
+    'pageSize': pageSize,
+    'unpaged': unpaged,
+  };
+}
+
 class PageUserCommentsResponse {
   final int totalElements;
   final int totalPages;
   final int size;
   final List<UserComment> content;
   final int number;
+  final Sort sort;
   final int numberOfElements;
+  final Pageable pageable;
   final bool first;
   final bool last;
   final bool empty;
@@ -67,7 +125,9 @@ class PageUserCommentsResponse {
     required this.size,
     required this.content,
     required this.number,
+    required this.sort,
     required this.numberOfElements,
+    required this.pageable,
     required this.first,
     required this.last,
     required this.empty,
@@ -83,7 +143,9 @@ class PageUserCommentsResponse {
               .map((e) => UserComment.fromJson(e))
               .toList(),
       number: json['number'],
+      sort: Sort.fromJson(json['sort']),
       numberOfElements: json['numberOfElements'],
+      pageable: Pageable.fromJson(json['pageable']),
       first: json['first'],
       last: json['last'],
       empty: json['empty'],
@@ -97,7 +159,9 @@ class PageUserCommentsResponse {
       'size': size,
       'content': content.map((e) => e.toJson()).toList(),
       'number': number,
+      'sort': sort.toJson(),
       'numberOfElements': numberOfElements,
+      'pageable': pageable.toJson(),
       'first': first,
       'last': last,
       'empty': empty,

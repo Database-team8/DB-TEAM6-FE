@@ -58,7 +58,8 @@ class _CommentListWidgetState extends State<CommentListWidget> {
 
     if (widget.boardId == null) {
       final userComments = viewModel.userComments;
-      if (userComments.isEmpty) return const Center(child: Text('댓글이 없습니다.'));
+      if (userComments.isEmpty)
+        return const Center(child: Text('내가 작성한 댓글이 없습니다.'));
 
       return ListView.separated(
         shrinkWrap: true,
@@ -69,11 +70,11 @@ class _CommentListWidgetState extends State<CommentListWidget> {
           return _CommentCard(
             content: comment.content,
             createdAt: comment.createdAt,
-            userId: comment.userId,
+            // userId: comment.userId,
             nickname: null,
             profileImage: null,
             currentUserId: widget.currentUserId,
-            boardId: widget.boardId!,
+            boardId: widget.boardId,
             commentId: comment.commentId,
           );
         },
@@ -113,7 +114,7 @@ class _CommentCard extends StatefulWidget {
   final String? nickname;
   final String? profileImage;
   final int? currentUserId;
-  final int boardId;
+  final int? boardId;
   final int commentId;
 
   const _CommentCard({
@@ -132,13 +133,17 @@ class _CommentCard extends StatefulWidget {
 }
 
 class _CommentCardState extends State<_CommentCard> {
-  late Future<User>? _userFuture;
+  Future<User>? _userFuture;
   bool _isEditing = false;
   late TextEditingController _editController;
 
   @override
   void initState() {
     super.initState();
+
+    _userFuture =
+        null; //여기서 _userFuture = getIt<UserRepository>().getUserById(widget.userId!); 이런식으로 userId를 가져와서 userId에 따른 프로필사진이나 이름을 가져오는 것 같은데 추가구현필요
+
     _editController = TextEditingController(text: widget.content); // 초기값 설정
   }
 
@@ -166,7 +171,7 @@ class _CommentCardState extends State<_CommentCard> {
             Align(
               alignment: Alignment.bottomRight,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit, size: 16),
@@ -175,14 +180,32 @@ class _CommentCardState extends State<_CommentCard> {
                       // 수정
                       print('수정 클릭: ${widget.userId}');
                     },
+                    visualDensity: const VisualDensity(
+                      horizontal: -4,
+                      vertical: -4,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
+                  const SizedBox(width: 8), // ← 간격만 추가
                   IconButton(
                     icon: const Icon(Icons.delete, size: 16),
                     onPressed: () {
                       final viewModel = context.read<CommentViewModel>();
-                      viewModel.deleteComment(widget.boardId, widget.commentId);
+                      if (widget.boardId != null) {
+                        viewModel.deleteComment(
+                          widget.boardId!,
+                          widget.commentId,
+                        );
+                      }
                       print('삭제 클릭: ${widget.userId}');
                     },
+                    visualDensity: const VisualDensity(
+                      horizontal: -4,
+                      vertical: -4,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
