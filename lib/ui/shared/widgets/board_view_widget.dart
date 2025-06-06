@@ -7,6 +7,7 @@ import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:ajoufinder/data/dto/comment/post_comment/post_comment_request.dart';
 
 class BoardViewWidget extends StatefulWidget {
   const BoardViewWidget({super.key});
@@ -32,7 +33,8 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     final boardViewModel = Provider.of<BoardViewModel>(context);
     final Board? selectedBoard = boardViewModel.selectedBoard;
 
-    if (selectedBoard != null && selectedBoard.id != _currentlyDisplayedBoardId) {
+    if (selectedBoard != null &&
+        selectedBoard.id != _currentlyDisplayedBoardId) {
       _currentlyDisplayedBoardId = selectedBoard.id;
       _loadCommentsForBoard(selectedBoard);
     }
@@ -41,8 +43,11 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
   void _loadCommentsForBoard(Board board) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final commentsViewModel = Provider.of<CommentViewModel>(context, listen: false);
-        commentsViewModel.fetchCommentsByBoardId(boardId: board.id);
+        final commentsViewModel = Provider.of<CommentViewModel>(
+          context,
+          listen: false,
+        );
+        commentsViewModel.fetchComments(board.id);
       }
     });
   }
@@ -55,18 +60,23 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
 
   void _submitComment(BuildContext context, int boardId) {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final commentViewModel = Provider.of<CommentViewModel>(context, listen: false);
+    final commentViewModel = Provider.of<CommentViewModel>(
+      context,
+      listen: false,
+    );
     final currentUser = authViewModel.currentUser;
 
     if (_commentController.text.isNotEmpty && currentUser != null) {
-      // CommentViewModel의 postComment 메서드가 boardId, content, isSecret을 받는다고 가정
-      commentViewModel.postComments(comment: _commentController.text,);
+      commentViewModel.postComment(
+        boardId,
+        PostCommentRequest(
+          content: _commentController.text,
+          isSecret: _isSecretComment,
+        ),
+      );
       _commentController.clear();
-      // 비밀 댓글 상태는 제출 후 초기화하거나 유지할 수 있음 (여기서는 유지)
-      // if (_isSecretComment) { // 만약 제출 후 비밀댓글 상태를 초기화한다면
-      //   setState(() { _isSecretComment = false; });
-      // }
     }
+
     FocusScope.of(context).unfocus();
   }
 
@@ -92,27 +102,43 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-                title: Text('게시글 삭제', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  '게시글 삭제',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
                 onTap: () async {
                   Navigator.pop(bottomSheetContext); // BottomSheet 닫기
                   // 삭제 확인 다이얼로그 표시
                   final bool? confirmDelete = await showDialog<bool>(
                     context: context,
-                    builder: (dialogContext) => AlertDialog(
-                      title: const Text('게시글 삭제 확인'),
-                      content: const Text('정말로 이 게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('취소'),
-                          onPressed: () => Navigator.of(dialogContext).pop(false),
+                    builder:
+                        (dialogContext) => AlertDialog(
+                          title: const Text('게시글 삭제 확인'),
+                          content: const Text(
+                            '정말로 이 게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('취소'),
+                              onPressed:
+                                  () => Navigator.of(dialogContext).pop(false),
+                            ),
+                            TextButton(
+                              child: Text(
+                                '삭제',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                              onPressed:
+                                  () => Navigator.of(dialogContext).pop(true),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          child: Text('삭제', style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                          onPressed: () => Navigator.of(dialogContext).pop(true),
-                        ),
-                      ],
-                    ),
                   );
                   if (confirmDelete == true) {
                     // TODO: ViewModel을 통해 게시글 삭제 로직 실행
@@ -129,39 +155,65 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final boardViewModel = context.watch<BoardViewModel>();
+    //final currentUserId = context.read<AuthViewModel>().currentUser?.userId; // userId 받아오는게 어디에도 없는데 해결방법 생각해보기
+    final int currentUserId = 4; // 임시 사용자 ID
 
-    if (boardViewModel.isLoadingBoardDetails && boardViewModel.selectedBoard == null) {
+    if (boardViewModel.isLoadingBoardDetails &&
+        boardViewModel.selectedBoard == null) {
       return Scaffold(
         backgroundColor: theme.colorScheme.surface,
-        appBar: AppBar(backgroundColor: theme.colorScheme.surface, elevation: 0, leading: IconButton(icon: Icon(Icons.close, color: theme.colorScheme.onSurface), onPressed: () => Navigator.of(context).pop())),
+        appBar: AppBar(
+          backgroundColor: theme.colorScheme.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (boardViewModel.boardDetailsError != null && boardViewModel.selectedBoard == null) {
+    if (boardViewModel.boardDetailsError != null &&
+        boardViewModel.selectedBoard == null) {
       return Scaffold(
         backgroundColor: theme.colorScheme.surface,
-        appBar: AppBar(backgroundColor: theme.colorScheme.surface, elevation: 0, leading: IconButton(icon: Icon(Icons.close, color: theme.colorScheme.onSurface), onPressed: () => Navigator.of(context).pop())),
+        appBar: AppBar(
+          backgroundColor: theme.colorScheme.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text('오류: ${boardViewModel.boardDetailsError}', style: TextStyle(color: theme.colorScheme.error), textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  if (_currentlyDisplayedBoardId != null) {
-                    boardViewModel.fetchBoardDetails(_currentlyDisplayedBoardId!);
-                  }
-                },
-                child: const Text('다시 시도'),
-              )
-            ]),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '오류: ${boardViewModel.boardDetailsError}',
+                  style: TextStyle(color: theme.colorScheme.error),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_currentlyDisplayedBoardId != null) {
+                      boardViewModel.fetchBoardDetails(
+                        _currentlyDisplayedBoardId!,
+                      );
+                    }
+                  },
+                  child: const Text('다시 시도'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -172,9 +224,20 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
       return Scaffold(
         backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: theme.colorScheme.surface, elevation: 0,
-          leading: IconButton(icon: Icon(Icons.close, color: theme.colorScheme.onSurface), onPressed: () => Navigator.of(context).pop()),
-          title: Text('게시글 정보 없음', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)), centerTitle: true,
+          backgroundColor: theme.colorScheme.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            '게시글 정보 없음',
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
         ),
         body: const Center(child: Text('게시글 정보를 불러올 수 없습니다.')),
       );
@@ -189,7 +252,15 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
         ),
-        title: Text(board.title, overflow: TextOverflow.ellipsis, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          board.title,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         centerTitle: true,
         actions: [
           // 북마크 버튼 등 다른 액션 추가 가능
@@ -213,8 +284,16 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
               endIndent: 16.0,
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0), // 댓글 목록 위아래 패딩 조정
-              child: CommentListWidget.forBoard(boardId: board.id),
+              padding: const EdgeInsets.fromLTRB(
+                16.0,
+                0,
+                16.0,
+                16.0,
+              ), // 댓글 목록 위아래 패딩 조정
+              child: CommentListWidget.forBoard(
+                boardId: board.id,
+                currentUserId: currentUserId,
+              ),
             ),
             const SizedBox(height: 80), // FAB 공간 확보
           ],
@@ -239,16 +318,19 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Center(
-              child: CircularProgressIndicator(
-            value: loadingProgress.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-                : null,
-            strokeWidth: 2.0,
-          ));
+            child: CircularProgressIndicator(
+              value:
+                  loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+              strokeWidth: 2.0,
+            ),
+          );
         },
         errorBuilder: (context, exception, stackTrace) {
-          return Container( // 오류 시 배경 및 아이콘
+          return Container(
+            // 오류 시 배경 및 아이콘
             height: imageHeight,
             width: double.infinity,
             color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
@@ -279,37 +361,56 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Card( // Card로 감싸서 그림자 효과와 둥근 모서리 적용
+      child: Card(
+        // Card로 감싸서 그림자 효과와 둥근 모서리 적용
         elevation: 2.0,
         clipBehavior: Clip.antiAlias, // ClipRRect와 함께 사용
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15.0), // Card보다 약간 작게
-          child: imageContent
+          child: imageContent,
         ),
       ),
     );
   }
 
-  Widget _buildUserInfoSection({required Board board, required BuildContext context}) {
+  Widget _buildUserInfoSection({
+    required Board board,
+    required BuildContext context,
+  }) {
     final theme = Theme.of(context);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final author = board.user;
-    final bool isAuthor = (authViewModel.currentUser != null && author == authViewModel.currentUser!);
+    final bool isAuthor =
+        (authViewModel.currentUser != null &&
+            author == authViewModel.currentUser!);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0), // 패딩 조정
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20.0,
+        vertical: 8.0,
+      ), // 패딩 조정
       child: Row(
         children: [
           CircleAvatar(
             radius: 22, // 크기 조정
-            backgroundImage: (author.profileImage != null && author.profileImage!.isNotEmpty)
-            ? NetworkImage(author.profileImage!)
-            : null,
+            backgroundImage:
+                (author.profileImage != null && author.profileImage!.isNotEmpty)
+                    ? NetworkImage(author.profileImage!)
+                    : null,
             backgroundColor: theme.colorScheme.surfaceVariant, // 배경색 추가
-            child: (author.profileImage == null || author.profileImage!.isEmpty)
-            ? Icon(Icons.person_rounded, size: 22, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)) // 아이콘 및 색상 변경
-            : null,
+            child:
+                (author.profileImage == null || author.profileImage!.isEmpty)
+                    ? Icon(
+                      Icons.person_rounded,
+                      size: 22,
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                        0.8,
+                      ),
+                    ) // 아이콘 및 색상 변경
+                    : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -318,18 +419,27 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
               children: [
                 Text(
                   author.nickname,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
-                Text( // 작성일 표시 추가
+                Text(
+                  // 작성일 표시 추가
                   '${DateFormat('yyyy.MM.dd HH:mm').format(board.createdAt)} 작성',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
           if (isAuthor)
             IconButton(
-              icon: Icon(Icons.more_horiz_rounded, color: theme.colorScheme.onSurfaceVariant), // 아이콘 변경
+              icon: Icon(
+                Icons.more_horiz_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+              ), // 아이콘 변경
               tooltip: '게시글 관리',
               onPressed: () {
                 _showBoardManageOptions(context, board); // 게시글 관리 옵션 표시
@@ -347,16 +457,35 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBoardInfoRow(context, Icons.location_on_outlined, '습득/분실 위치', board.location.locationName),
-          _buildBoardInfoRow(context, Icons.category_outlined, '물품 종류', board.itemType.itemType),
-          _buildBoardInfoRow(context, Icons.help_outline_rounded, '상태', board.status), // 아이콘 변경
+          _buildBoardInfoRow(
+            context,
+            Icons.location_on_outlined,
+            '습득/분실 위치',
+            board.location.locationName,
+          ),
+          _buildBoardInfoRow(
+            context,
+            Icons.category_outlined,
+            '물품 종류',
+            board.itemType.itemType,
+          ),
+          _buildBoardInfoRow(
+            context,
+            Icons.help_outline_rounded,
+            '상태',
+            board.status,
+          ), // 아이콘 변경
           const SizedBox(height: 20),
           Text(
             '상세 내용',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
-          Container( // 상세 내용을 박스로 감싸 가독성 향상
+          Container(
+            // 상세 내용을 박스로 감싸 가독성 향상
             padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
@@ -365,7 +494,10 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
             width: double.infinity,
             child: Text(
               board.description,
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.85), height: 1.6),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.85),
+                height: 1.6,
+              ),
               textAlign: TextAlign.left,
             ),
           ),
@@ -384,7 +516,12 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     );
   }
 
-  Widget _buildBoardInfoRow(BuildContext context, IconData icon, String label, String? value) {
+  Widget _buildBoardInfoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String? value,
+  ) {
     final theme = Theme.of(context);
     if (value == null || value.isEmpty) return const SizedBox.shrink();
 
@@ -419,54 +556,67 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     final theme = Theme.of(context);
 
     return CustomCommentFab(
+      boardId: boardId,
+      isSecret: _isSecretComment,
       commentController: _commentController,
-      onCommentSubmitted: (commentText) {
-        _submitComment(context, boardId);
-        _commentController.clear();
-      },
       leadingWidget: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Transform.scale(
-          scale: 0.8,
-          child: Checkbox(
-            value: _isSecretComment,
-            onChanged: (value) {
-              setState(() {
-                _isSecretComment = value ?? false;
-              });
-            },
-            activeColor: theme.colorScheme.surfaceTint,
-            checkColor: theme.colorScheme.onSurfaceVariant,
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            side: BorderSide(color: (theme.colorScheme.onSurface).withValues(alpha: 0.7)),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Transform.scale(
+            scale: 0.8,
+            child: Checkbox(
+              value: _isSecretComment,
+              onChanged: (value) {
+                setState(() {
+                  _isSecretComment = value ?? false;
+                });
+              },
+              activeColor: theme.colorScheme.surfaceTint,
+              checkColor: theme.colorScheme.onSurfaceVariant,
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              side: BorderSide(
+                color: (theme.colorScheme.onSurface).withValues(alpha: 0.7),
+              ),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(),
-          child: _isSecretComment
-          ? Text(
-            '비밀댓글',
-            style: theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant),
-          )
-          : Text(
-            '일반댓글',
-            style: theme.textTheme.labelSmall!.copyWith(fontWeight: FontWeight.w500, color: theme.colorScheme.onSurfaceVariant),
-          ) 
-        ),
-      ],
-    ),
+          Padding(
+            padding: const EdgeInsets.only(),
+            child:
+                _isSecretComment
+                    ? Text(
+                      '비밀댓글',
+                      style: theme.textTheme.labelSmall!.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                    : Text(
+                      '일반댓글',
+                      style: theme.textTheme.labelSmall!.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+          ),
+        ],
+      ),
       onMorePressed: () {},
       collapsedHeight: 56.0, // 표준 FAB 높이에 맞춤
       mainContentWhenCollapsed: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Text(
           '댓글을 남겨주세요...',
-          style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium!.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
-      backgroundColor: ElevationOverlay.colorWithOverlay(theme.colorScheme.surface, theme.colorScheme.primary, 3.0),
+      backgroundColor: ElevationOverlay.colorWithOverlay(
+        theme.colorScheme.surface,
+        theme.colorScheme.primary,
+        3.0,
+      ),
     );
   }
 }

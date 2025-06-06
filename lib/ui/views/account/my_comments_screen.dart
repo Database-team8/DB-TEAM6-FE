@@ -4,7 +4,7 @@ import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class MyCommentsScreen extends StatefulWidget{
+class MyCommentsScreen extends StatefulWidget {
   const MyCommentsScreen({super.key});
 
   @override
@@ -12,14 +12,16 @@ class MyCommentsScreen extends StatefulWidget{
 }
 
 class _MyCommentsScreenState extends State<MyCommentsScreen> {
-
-  @override 
+  @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final commentViewModel = Provider.of<CommentViewModel>(context, listen: false);
-      commentViewModel.fetchMyComments();
+      final commentViewModel = Provider.of<CommentViewModel>(
+        context,
+        listen: false,
+      );
+      commentViewModel.fetchUserComments();
     });
   }
 
@@ -28,14 +30,20 @@ class _MyCommentsScreenState extends State<MyCommentsScreen> {
     final theme = Theme.of(context);
 
     final authViewModel = Provider.of<AuthViewModel>(context, listen: true);
-    final commentViewModel = Provider.of<CommentViewModel>(context, listen: true);
+    final commentViewModel = Provider.of<CommentViewModel>(
+      context,
+      listen: true,
+    );
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: theme.colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
@@ -44,16 +52,22 @@ class _MyCommentsScreenState extends State<MyCommentsScreen> {
           style: TextStyle(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
-          ),          
+          ),
         ),
       ),
-      body: _buildBodyContent(commentViewModel: commentViewModel, authViewModel: authViewModel),
+      body: _buildBodyContent(
+        commentViewModel: commentViewModel,
+        authViewModel: authViewModel,
+      ),
     );
   }
 
-  Widget _buildBodyContent({required CommentViewModel commentViewModel, required AuthViewModel authViewModel}) {
+  Widget _buildBodyContent({
+    required CommentViewModel commentViewModel,
+    required AuthViewModel authViewModel,
+  }) {
     return commentViewModel.isLoading
-    ? Center(child: CircularProgressIndicator())
-    : CommentListWidget.forCurrentUser();
+        ? Center(child: CircularProgressIndicator())
+        : CommentListWidget.forCurrentUser();
   }
 }

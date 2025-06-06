@@ -1,83 +1,130 @@
-import 'package:ajoufinder/domain/entities/comment.dart';
-import 'package:ajoufinder/domain/entities/user.dart';
-import 'package:ajoufinder/domain/repository/comment_repository.dart';
-import 'package:ajoufinder/domain/repository/user_repository.dart';
-import 'package:ajoufinder/injection_container.dart';
-import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
+import 'package:ajoufinder/domain/entities/comment.dart';
+import 'package:ajoufinder/domain/entities/user.dart';
+import 'package:ajoufinder/domain/repository/user_repository.dart';
+import 'package:ajoufinder/injection_container.dart';
 
-class CommentListWidget extends StatefulWidget{
+class CommentListWidget extends StatefulWidget {
   final int? boardId;
+  final int? currentUserId;
 
-  const CommentListWidget.forCurrentUser({super.key,}) : boardId = null;
-  const CommentListWidget.forBoard({super.key, required this.boardId});
+  const CommentListWidget.forBoard({
+    super.key,
+    required this.boardId,
+    required this.currentUserId,
+  });
+  const CommentListWidget.forCurrentUser({super.key})
+    : boardId = null,
+      currentUserId = null;
 
   @override
   State<CommentListWidget> createState() => _CommentListWidgetState();
 }
 
 class _CommentListWidgetState extends State<CommentListWidget> {
-  final commentRepository = getIt<CommentRepository>();
-
   @override
   void initState() {
     super.initState();
-    final commentViewModel = Provider.of<CommentViewModel>(context, listen: false);
+    final viewModel = Provider.of<CommentViewModel>(context, listen: false);
 
-    if (widget.boardId == null) {
-      commentViewModel.fetchMyComments();
-    } else {
-      commentViewModel.fetchCommentsByBoardId(boardId: widget.boardId!);
+    if (widget.boardId != null) {
+      viewModel.fetchComments(widget.boardId!);
     }
   }
 
   @override
-  void didUpdateWidget(CommentListWidget oldWidget) {
+  void didUpdateWidget(covariant CommentListWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    final commentViewModel = Provider.of<CommentViewModel>(context, listen: false);
+    final viewModel = Provider.of<CommentViewModel>(context, listen: false);
 
     if (widget.boardId == null) {
-      commentViewModel.fetchMyComments();
+      viewModel.fetchUserComments();
     } else {
-      commentViewModel.fetchCommentsByBoardId(boardId: widget.boardId!);
+      viewModel.fetchComments(widget.boardId!);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final commentViewModel = Provider.of<CommentViewModel>(context);
+    final viewModel = Provider.of<CommentViewModel>(context);
     final theme = Theme.of(context);
 
-    if (commentViewModel.comments.isEmpty) {
-      return Center(child: Text('댓글이 없습니다'),);
-    }else {
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (widget.boardId == null) {
+      final userComments = viewModel.userComments;
+      if (userComments.isEmpty) return const Center(child: Text('댓글이 없습니다.'));
+
       return ListView.separated(
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        itemCount: commentViewModel.comments.length,
-        itemBuilder: (context, index) => _CommentCard(comment: commentViewModel.comments[index]),
-        separatorBuilder: (context, index) {
-          return Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: theme.colorScheme.surfaceTint,
-            indent: 20.0,
-            endIndent: 20.0,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: userComments.length,
+        itemBuilder: (context, index) {
+          final comment = userComments[index];
+          return _CommentCard(
+            content: comment.content,
+            createdAt: comment.createdAt,
+            userId: comment.userId,
+            nickname: null,
+            profileImage: null,
+            currentUserId: widget.currentUserId,
+            boardId: widget.boardId!,
+            commentId: comment.commentId,
           );
         },
+        separatorBuilder: (_, __) => Divider(height: 1),
+      );
+    } else {
+      final comments = viewModel.comments;
+      if (comments.isEmpty) return const Center(child: Text('댓글이 없습니다.'));
+
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: comments.length,
+        itemBuilder: (context, index) {
+          final comment = comments[index];
+          return _CommentCard(
+            content: comment.content,
+            createdAt: comment.createdAt,
+            userId: comment.userId,
+            nickname: comment.user.nickname,
+            profileImage: comment.user.profileImage,
+            currentUserId: widget.currentUserId,
+            commentId: comment.commentId,
+            boardId: widget.boardId!, // boardId는 null이 아닌 경우만 여기 도달함
+          );
+        },
+        separatorBuilder: (_, __) => Divider(height: 1),
       );
     }
   }
 }
 
 class _CommentCard extends StatefulWidget {
-  final Comment comment;
+  final String content;
+  final DateTime createdAt;
+  final int? userId;
+  final String? nickname;
+  final String? profileImage;
+  final int? currentUserId;
+  final int boardId;
+  final int commentId;
 
   const _CommentCard({
-    required this.comment,
+    required this.content,
+    required this.createdAt,
+    this.userId,
+    required this.boardId,
+    required this.commentId,
+    this.nickname,
+    this.profileImage,
+    required this.currentUserId,
   });
 
   @override
@@ -85,136 +132,117 @@ class _CommentCard extends StatefulWidget {
 }
 
 class _CommentCardState extends State<_CommentCard> {
-  late Future<User> _userFuture;
-  
+  late Future<User>? _userFuture;
+  bool _isEditing = false;
+  late TextEditingController _editController;
+
   @override
   void initState() {
     super.initState();
-    final userRepository = getIt<UserRepository>();
-    _userFuture = userRepository.findById(widget.comment.userId);
+    _editController = TextEditingController(text: widget.content); // 초기값 설정
+  }
+
+  @override
+  void dispose() {
+    _editController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildUpperRow(),    
-            SizedBox(height: 8.0,), 
-            _buildUnderRow()
-          ],
-        )
-      );
-  }
-
-  Widget _buildUpperRow() {
     final theme = Theme.of(context);
 
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(theme),
+          const SizedBox(height: 6),
+          Text(widget.content, style: theme.textTheme.bodyMedium),
+
+          if (widget.currentUserId != null &&
+              widget.userId == widget.currentUserId)
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 16),
+                    onPressed: () {
+                      final viewModel = context.read<CommentViewModel>();
+                      // 수정
+                      print('수정 클릭: ${widget.userId}');
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 16),
+                    onPressed: () {
+                      final viewModel = context.read<CommentViewModel>();
+                      viewModel.deleteComment(widget.boardId, widget.commentId);
+                      print('삭제 클릭: ${widget.userId}');
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(ThemeData theme) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        _buildCommentedUserInfo(),
+        _buildUserInfo(theme),
         const Spacer(),
         Text(
-          DateFormat('MM.dd HH:mm').format(widget.comment.createdAt),
-          style: theme.textTheme.bodySmall!.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 11.0
+          DateFormat('MM.dd HH:mm').format(widget.createdAt),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.hintColor,
+            fontSize: 11,
           ),
         ),
       ],
     );
   }
-  
-  Widget _buildCommentedUserInfo() {
-    final theme = Theme.of(context);
-    const separator = SizedBox(width: 8.0,);
+
+  Widget _buildUserInfo(ThemeData theme) {
+    const gap = SizedBox(width: 8);
+
+    if (widget.nickname != null) {
+      return Row(
+        children: [
+          CircleAvatar(
+            radius: 10,
+            backgroundColor: theme.colorScheme.surfaceVariant,
+            child:
+                widget.profileImage != null
+                    ? Image.network(widget.profileImage!, fit: BoxFit.contain)
+                    : null,
+          ),
+          gap,
+          Text(widget.nickname!, style: theme.textTheme.bodySmall),
+        ],
+      );
+    }
 
     return FutureBuilder<User>(
-      future: _userFuture, 
+      future: _userFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 10,
-                backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                child: const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2.0)),
-              ),
-              separator,
-              Text(
-                '로딩중',
-                style: theme.textTheme.titleSmall!.copyWith(fontWeight: FontWeight.normal),
-              ),
-            ],
-          );          
-        } else if (snapshot.hasError) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 10,
-                backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                child: Icon(Icons.error_outline_rounded, color: theme.colorScheme.error, size: 20)
-              ),
-              separator,
-              Text(
-                '사용자 정보 에러',
-                style: theme.textTheme.titleSmall!.copyWith(fontWeight: FontWeight.normal, color: theme.colorScheme.error),
-              ),
-            ],
-          );
-        } else if (snapshot.hasData) {
-          final user = snapshot.data!;
-
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 10,
-                backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                child: (user.profileImage != null && user.profileImage!.isNotEmpty) 
-                ? Image.network(user.profileImage!, fit: BoxFit.contain)
-                : null,
-              ),
-              separator,
-              Text(
-                user.nickname,
-                style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
-              ),
-            ],
-          );
-        } else {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 10,
-                backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                child: null,
-              ),
-              separator,
-              Text(
-                '에러',
-                style: theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.normal),
-              ),
-            ],
-          );
-        }
-      }
-    );
-  }
-  
-  Widget _buildUnderRow() {
-    final theme = Theme.of(context);
-    
-    return Text(
-      widget.comment.content,
-      style: theme.textTheme.titleSmall!.copyWith(fontSize: 13.0),
+        final name = snapshot.hasData ? snapshot.data!.nickname : '로딩 중';
+        return Row(
+          children: [
+            CircleAvatar(
+              radius: 10,
+              backgroundColor: theme.colorScheme.surfaceVariant,
+            ),
+            gap,
+            Text(name, style: theme.textTheme.bodySmall),
+          ],
+        );
+      },
     );
   }
 }

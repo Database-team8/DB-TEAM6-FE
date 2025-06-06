@@ -43,93 +43,95 @@ import 'package:http/http.dart' as http;
 final getIt = GetIt.instance;
 
 Future<void> setUpDependencies() async {
-  getIt.registerLazySingleton<http.Client>(() => BrowserClient()..withCredentials = true);
+  getIt.registerLazySingleton<http.Client>(
+    () => BrowserClient()..withCredentials = true,
+  );
   getIt.registerLazySingleton<CookieService>(() => CookieServiceWeb());
-  getIt.registerLazySingleton<BoardRepository>(() => BoardRepositoryImpl(
-    getIt<http.Client>(), 
-  ));
-  getIt.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl());
-  getIt.registerLazySingleton<AlarmRepository>(() => AlarmRepositoryImpl(
-    getIt<http.Client>(),
-    getIt<CookieService>(),
-  ));
-  getIt.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(
-    getIt<http.Client>(),
-  ));
-  getIt.registerLazySingleton<LocationRepository>(() => LocationRepositoryImpl(
-    getIt<http.Client>(),
-  ));
-  getIt.registerLazySingleton<ConditionRepository>(() => ConditionRepositoryImpl(
-    getIt<http.Client>(),
-  ));
-  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
-    getIt<http.Client>(), 
-    getIt<CookieService>()
-  ));
-  getIt.registerFactory<ItemtypesUsecase>(() => ItemtypesUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<BoardStatusesUsecase>(() => BoardStatusesUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<LogoutUsecase>(() => LogoutUsecase(
-    getIt<AuthRepository>()
-  ));
-  getIt.registerFactory<LoginUsecase>(() => LoginUsecase(
-    getIt<AuthRepository>()
-  ));
-  getIt.registerFactory<LocationsUsecase>(() => LocationsUsecase(
-    getIt<LocationRepository>()
-  ));
-  getIt.registerFactory<ChangePasswordUsecase>(() => ChangePasswordUsecase(
-    getIt<AuthRepository>()
-  ));
-  getIt.registerFactory<ProfileUsecase>(() => ProfileUsecase(
-    getIt<AuthRepository>()
-  ));
-  getIt.registerFactory<MyCommentsUsecase>(() => MyCommentsUsecase(
-    getIt<CommentRepository>()
-  ));
-  getIt.registerFactory<MyBoardsUsecase>(() => MyBoardsUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<LostBoardsUsecase>(() => LostBoardsUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<FoundBoardsUsecase>(() => FoundBoardsUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<DetailedBoardUsecase>(() => DetailedBoardUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<SignUpUsecase>(() => SignUpUsecase(
-    getIt<UserRepository>()
-  ));
-  getIt.registerFactory<AlarmsUsecase>(() => AlarmsUsecase(
-    getIt<AlarmRepository>()
-  ));
-  getIt.registerFactory<PostLostBoardUsecase>(() => PostLostBoardUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<PostFoundBoardUsecase>(() => PostFoundBoardUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<FilterLostBoardsUsecase>(() => FilterLostBoardsUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<FilterFoundBoardsUsecase>(() => FilterFoundBoardsUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<DeleteBoardUsecase>(() => DeleteBoardUsecase(
-    getIt<BoardRepository>()
-  ));
-  getIt.registerFactory<PostConditionUsecase>(() => PostConditionUsecase(
-    getIt<ConditionRepository>()
-  ));
-  getIt.registerFactory<ConditionsUsecase>(() => ConditionsUsecase(
-    getIt<ConditionRepository>()
-  ));
-  getIt.registerFactory<DeleteConditionUsecase>(() => DeleteConditionUsecase(
-    getIt<ConditionRepository>()
-  ));
+  getIt.registerLazySingleton<BoardRepository>(
+    () => BoardRepositoryImpl(getIt<http.Client>()),
+  );
+  getIt.registerLazySingleton<CommentRepository>(
+    () => CommentRepositoryImpl(getIt<http.Client>()),
+  );
+  getIt.registerLazySingleton<AlarmRepository>(
+    () => AlarmRepositoryImpl(getIt<http.Client>(), getIt<CookieService>()),
+  );
+  getIt.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(getIt<http.Client>()),
+  );
+  getIt.registerLazySingleton<LocationRepository>(
+    () => LocationRepositoryImpl(getIt<http.Client>()),
+  );
+  getIt.registerLazySingleton<ConditionRepository>(
+    () => ConditionRepositoryImpl(getIt<http.Client>()),
+  );
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(getIt<http.Client>(), getIt<CookieService>()),
+  );
+  getIt.registerFactory<ItemtypesUsecase>(
+    () => ItemtypesUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<BoardStatusesUsecase>(
+    () => BoardStatusesUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<LogoutUsecase>(
+    () => LogoutUsecase(getIt<AuthRepository>()),
+  );
+  getIt.registerFactory<LoginUsecase>(
+    () => LoginUsecase(getIt<AuthRepository>()),
+  );
+  getIt.registerFactory<LocationsUsecase>(
+    () => LocationsUsecase(getIt<LocationRepository>()),
+  );
+  getIt.registerFactory<ChangePasswordUsecase>(
+    () => ChangePasswordUsecase(getIt<AuthRepository>()),
+  );
+  getIt.registerFactory<ProfileUsecase>(
+    () => ProfileUsecase(getIt<AuthRepository>()),
+  );
+  getIt.registerFactory<MyCommentsUsecase>(
+    () => MyCommentsUsecase(getIt<CommentRepository>()),
+  );
+  getIt.registerFactory<MyBoardsUsecase>(
+    () => MyBoardsUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<LostBoardsUsecase>(
+    () => LostBoardsUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<FoundBoardsUsecase>(
+    () => FoundBoardsUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<DetailedBoardUsecase>(
+    () => DetailedBoardUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<SignUpUsecase>(
+    () => SignUpUsecase(getIt<UserRepository>()),
+  );
+  getIt.registerFactory<AlarmsUsecase>(
+    () => AlarmsUsecase(getIt<AlarmRepository>()),
+  );
+  getIt.registerFactory<PostLostBoardUsecase>(
+    () => PostLostBoardUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<PostFoundBoardUsecase>(
+    () => PostFoundBoardUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<FilterLostBoardsUsecase>(
+    () => FilterLostBoardsUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<FilterFoundBoardsUsecase>(
+    () => FilterFoundBoardsUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<DeleteBoardUsecase>(
+    () => DeleteBoardUsecase(getIt<BoardRepository>()),
+  );
+  getIt.registerFactory<PostConditionUsecase>(
+    () => PostConditionUsecase(getIt<ConditionRepository>()),
+  );
+  getIt.registerFactory<ConditionsUsecase>(
+    () => ConditionsUsecase(getIt<ConditionRepository>()),
+  );
+  getIt.registerFactory<DeleteConditionUsecase>(
+    () => DeleteConditionUsecase(getIt<ConditionRepository>()),
+  );
 }

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
+import 'package:ajoufinder/data/dto/comment/post_comment/post_comment_request.dart';
 
 class CustomCommentFab extends StatefulWidget {
+  final int boardId;
+  final bool isSecret; // ← 추가!
   final Widget? leadingWidget;
   final VoidCallback onMorePressed;
   final Widget mainContentWhenCollapsed;
@@ -11,11 +16,12 @@ class CustomCommentFab extends StatefulWidget {
   final Color? foregroundColor;
 
   final TextEditingController commentController;
-  final ValueChanged<String> onCommentSubmitted;
   final FocusNode? commentFocusNode;
 
   const CustomCommentFab({
     super.key,
+    required this.boardId,
+    required this.isSecret,
     this.leadingWidget,
     required this.onMorePressed,
     this.mainContentWhenCollapsed = const Text(
@@ -30,7 +36,6 @@ class CustomCommentFab extends StatefulWidget {
     this.backgroundColor,
     this.foregroundColor,
     required this.commentController,
-    required this.onCommentSubmitted,
     this.commentFocusNode,
   });
 
@@ -38,7 +43,8 @@ class CustomCommentFab extends StatefulWidget {
   _CustomCommentFabState createState() => _CustomCommentFabState();
 }
 
-class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerProviderStateMixin {
+class _CustomCommentFabState extends State<CustomCommentFab>
+    with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _heightAnimation;
@@ -48,15 +54,14 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300), 
+      duration: const Duration(milliseconds: 300),
     );
     _heightAnimation = Tween<double>(
       begin: widget.collapsedHeight,
       end: widget.expandedHeight,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -83,30 +88,51 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
   }
 
   void _submitAndCollapse() {
-    if (widget.commentController.text.isNotEmpty) {
-      widget.onCommentSubmitted(widget.commentController.text);
+    final commentText = widget.commentController.text.trim();
+    if (commentText.isNotEmpty) {
+      final commentViewModel = Provider.of<CommentViewModel>(
+        context,
+        listen: false,
+      );
+
+      commentViewModel
+          .postComment(
+            widget.boardId,
+            PostCommentRequest(content: commentText, isSecret: widget.isSecret),
+          )
+          .then((_) {
+            commentViewModel.fetchComments(widget.boardId); // 댓글 목록 새로고침
+          });
+
+      widget.commentController.clear();
     }
-    _toggleExpand(); // 제출 후 축소
+    _toggleExpand();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bgColor = widget.backgroundColor ?? theme.colorScheme.surfaceTint;
-    final fgColorForElements = widget.foregroundColor ?? theme.colorScheme.onSurfaceVariant;
+    final fgColor =
+        widget.foregroundColor ?? theme.colorScheme.onSurfaceVariant;
 
     return AnimatedBuilder(
       animation: _heightAnimation,
       builder: (context, child) {
         return Container(
-          height: _heightAnimation.value, // 애니메이션되는 높이
+          height: _heightAnimation.value,
           width: widget.width ?? MediaQuery.of(context).size.width * 0.9,
           margin: EdgeInsets.symmetric(
-              horizontal: widget.width == null ? (MediaQuery.of(context).size.width * 0.05) : 0),
+            horizontal:
+                widget.width == null
+                    ? (MediaQuery.of(context).size.width * 0.05)
+                    : 0,
+          ),
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(
-                _isExpanded ? 20.0 : widget.collapsedHeight / 2),
+              _isExpanded ? 20.0 : widget.collapsedHeight / 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: theme.colorScheme.shadow,
@@ -116,9 +142,10 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
               ),
             ],
           ),
-          child: _isExpanded
-              ? _buildExpandedContent(theme, fgColorForElements)
-              : _buildCollapsedContent(theme, fgColorForElements),
+          child:
+              _isExpanded
+                  ? _buildExpandedContent(theme, fgColor)
+                  : _buildCollapsedContent(theme, fgColor),
         );
       },
     );
@@ -126,7 +153,7 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
 
   Widget _buildCollapsedContent(ThemeData theme, Color fgColor) {
     return GestureDetector(
-      onTap: _toggleExpand, // 탭하면 확장
+      onTap: _toggleExpand,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: Row(
@@ -137,9 +164,13 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
             ],
             Expanded(
               child: DefaultTextStyle(
-                style: theme.textTheme.bodyMedium?.copyWith(color: fgColor) ??
+                style:
+                    theme.textTheme.bodyMedium?.copyWith(color: fgColor) ??
                     TextStyle(color: fgColor, fontSize: 14),
-                textAlign: widget.leadingWidget == null ? TextAlign.center : TextAlign.start,
+                textAlign:
+                    widget.leadingWidget == null
+                        ? TextAlign.center
+                        : TextAlign.start,
                 child: widget.mainContentWhenCollapsed,
               ),
             ),
@@ -161,20 +192,19 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (widget.leadingWidget != null) widget.leadingWidget!,
-              // 확장 시에는 '더보기' 대신 '축소' 아이콘 또는 텍스트 버튼
               IconButton(
-                icon: Icon(Icons.keyboard_arrow_down_rounded, color: fgColor), // 아래 화살표 (축소)
+                icon: Icon(Icons.keyboard_arrow_down_rounded, color: fgColor),
                 onPressed: _toggleExpand,
               ),
             ],
           ),
-          Expanded( 
+          Expanded(
             child: TextField(
               controller: widget.commentController,
               focusNode: widget.commentFocusNode,
@@ -182,11 +212,14 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
                 hintText: '댓글 내용을 입력하세요...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: fgColor.withValues(alpha: 0.5)),
+                  borderSide: BorderSide(color: fgColor.withAlpha(80)),
                 ),
                 filled: true,
-                fillColor: theme.scaffoldBackgroundColor, // 또는 다른 배경색
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                fillColor: theme.scaffoldBackgroundColor,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               maxLines: null,
               keyboardType: TextInputType.multiline,
@@ -199,9 +232,11 @@ class _CustomCommentFabState extends State<CustomCommentFab> with SingleTickerPr
               backgroundColor: theme.colorScheme.onSurfaceVariant,
               foregroundColor: theme.colorScheme.surfaceTint,
               minimumSize: const Size(double.infinity, 40),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('제출',),
+            child: const Text('제출'),
           ),
         ],
       ),
