@@ -7,6 +7,9 @@ import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_request.
 import 'package:ajoufinder/data/dto/board/detailed_board/detailed_board_response.dart';
 import 'package:ajoufinder/data/dto/board/filter_boards/filter_board_response.dart';
 import 'package:ajoufinder/data/dto/board/filter_boards/filter_boards_request.dart';
+import 'package:ajoufinder/data/dto/board/patch_board/patch_board_request.dart';
+import 'package:ajoufinder/data/dto/board/patch_board/patch_board_status_request.dart';
+import 'package:ajoufinder/data/dto/board/patch_board/patch_board_status_response.dart';
 import 'package:ajoufinder/data/dto/board/post_board/post_board_request.dart';
 import 'package:ajoufinder/data/dto/board/post_board/post_board_response.dart';
 import 'package:ajoufinder/data/dto/itemtype/itemtypes/itemtypes_response.dart';
@@ -25,4 +28,7 @@ abstract class BoardRepository {
   Future<DeleteBoardResponse> deleteBoard(DeleteBoardRequest request);
   Future<FilterBoardResponse> filterLostBoards(FilterBoardsRequest request);
   Future<FilterBoardResponse> filterFoundBoards(FilterBoardsRequest request);
+  Future<PatchBoardStatusResponse> patchBoardAcitve(PatchBoardStatusRequest request);
+  Future<PatchBoardStatusResponse> patchBoardCompleted(PatchBoardStatusRequest request);
+  Future<PatchBoardStatusResponse> patchBoard(PatchBoardRequest request);
 }

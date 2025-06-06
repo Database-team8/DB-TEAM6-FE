@@ -21,6 +21,9 @@ import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/my_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_active_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_completed_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
@@ -120,7 +123,16 @@ Future<void> setUpDependencies() async {
   getIt.registerFactory<FilterFoundBoardsUsecase>(() => FilterFoundBoardsUsecase(
     getIt<BoardRepository>()
   ));
+  getIt.registerFactory<PatchBoardActiveUsecase>(() => PatchBoardActiveUsecase(
+    getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<PatchBoardCompletedUsecase>(() => PatchBoardCompletedUsecase(
+    getIt<BoardRepository>()
+  ));
   getIt.registerFactory<DeleteBoardUsecase>(() => DeleteBoardUsecase(
+    getIt<BoardRepository>()
+  ));
+  getIt.registerFactory<PatchBoardUsecase>(() => PatchBoardUsecase(
     getIt<BoardRepository>()
   ));
   getIt.registerFactory<PostConditionUsecase>(() => PostConditionUsecase(

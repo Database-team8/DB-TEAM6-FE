@@ -11,10 +11,10 @@ class DetailedBoardUsecase {
     try {
       final response = await _boardRepository.getBoardById(DetailedBoardRequest(boardId: boardId));
 
-      if (response.isSuccess && response.result != null) {
+      if (response.isSuccess) {
         print('게시글 상세 조회 성공 (Usecase): 게시글 ID $boardId의 상세 정보 수신');
         // 필요한 경우, response.content를 사용하여 게시글 상세 정보를 처리합니다.
-        return response.result!;
+        return response.result;
       } else {
         print(
           '게시글 상세 조회 실패 (Usecase): ${response.message}, 코드: ${response.code}',

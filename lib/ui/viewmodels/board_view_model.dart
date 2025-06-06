@@ -5,6 +5,9 @@ import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/found_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_active_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_completed_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/lost_boards_usecase.dart';
@@ -21,6 +24,9 @@ class BoardViewModel extends ChangeNotifier{
   final DeleteBoardUsecase _deleteBoardUsecase;
   final FilterLostBoardsUsecase _filterLostBoardsUsecase;
   final FilterFoundBoardsUsecase _filterFoundBoardsUsecase;
+  final PatchBoardActiveUsecase _patchBoardActiveUsecase;
+  final PatchBoardCompletedUsecase _patchBoardCompletedUsecase;
+  final PatchBoardUsecase _patchBoardUsecase;
 
   List<BoardItem> _boardItems = [];
   Board? _selectedBoard;
@@ -56,6 +62,9 @@ class BoardViewModel extends ChangeNotifier{
     this._deleteBoardUsecase,
     this._filterLostBoardsUsecase,
     this._filterFoundBoardsUsecase,
+    this._patchBoardActiveUsecase,
+    this._patchBoardCompletedUsecase,
+    this._patchBoardUsecase,
     ) {
     initialize();
   }
@@ -268,7 +277,6 @@ class BoardViewModel extends ChangeNotifier{
 
       if (result) {
         print('BoardViewModel: 게시글 삭제 성공 - ID: $boardId');
-        // 추후에 fetchboard로 상태갱신할것.
         success = true;
       } else {
         _postError = '게시글 삭제에 실패했습니다.';
@@ -312,6 +320,7 @@ class BoardViewModel extends ChangeNotifier{
       _setLoadingBoards(false);
     }
   }
+
   Future<void> fetchFilteredFoundBoards({
     String? status,
     int? itemTypeId,
@@ -339,6 +348,66 @@ class BoardViewModel extends ChangeNotifier{
       print('BoardViewModel: 습득 게시글 필터링 중 오류: $e');
     } finally {
       _setLoadingBoards(false);
+    }
+  }
+
+  Future<void> _patchBoardActivated() async {
+   _setPosting(true);
+   
+  if (_selectedBoard == null) return;
+
+   try {
+    final success = await _patchBoardActiveUsecase.execute(_selectedBoard!.id);
+
+    if (success) {
+      print('게시글 ID ${_selectedBoard!.id} 활성화 성공 후 처리');
+      await fetchBoardDetails(_selectedBoard!.id);
+    } else {
+      print('게시글 ID ${_selectedBoard!.id} 활성화 실패');
+      _boardDetailsError = '활성화 실패';
+    }
+   } catch (e) {
+    print('게시글 활성화 중 오류 발생: $e');
+    _boardDetailsError = e.toString();
+   } finally {
+    _setPosting(false);
+   }
+  }
+
+  Future<void> _patchBoardCompleted() async {
+   _setPosting(true);
+
+   if (_selectedBoard == null) return;
+
+   try {
+    final success = await _patchBoardCompletedUsecase.execute(_selectedBoard!.id);
+
+    if (success) {
+      print('게시글 ID ${_selectedBoard!.id} 비활성화 성공 후 처리');
+      await fetchBoardDetails(_selectedBoard!.id);
+    } else {
+      print('게시글 ID ${_selectedBoard!.id} 비활성화 실패');
+      _boardDetailsError = '비활성화 실패';
+    }
+   } catch (e) {
+    print('게시글 비활성화 중 오류 발생: $e');
+    _boardDetailsError = e.toString();
+   } finally {
+    _setPosting(false);
+   }
+  }
+
+  Future<void> toggleBoardStatus() async {
+    if (_selectedBoard == null) return;
+
+    try {
+      if (_selectedBoard!.status == 'ACTIVE') {
+        await _patchBoardCompleted();
+      } else {
+        await _patchBoardActivated();
+      }
+    } catch (e) {
+      print('게시글 상태 토글 중 오류: $e');
     }
   }
 }

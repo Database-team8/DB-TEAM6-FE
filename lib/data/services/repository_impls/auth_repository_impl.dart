@@ -89,12 +89,10 @@ class AuthRepositoryImpl extends AuthRepository{
     final url = Uri.parse('$baseUrl/user/profile');
 
     try {
-      final sessionId = await _cookieService.getCookie(cookieName);
       final response = await _client.get(
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'Cookie': '$cookieName=$sessionId',
         },
       );
 

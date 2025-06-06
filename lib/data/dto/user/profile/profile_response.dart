@@ -17,9 +17,7 @@ class ProfileResponse {
     return ProfileResponse(
       code: json['code'] as String,
       message: json['message'] as String,
-      result: json['result'] != null
-          ? User.fromJson(json['result'] as Map<String, dynamic>)
-          : null,
+      result: User.fromJson(json['result'] as Map<String, dynamic>),
       isSuccess: json['isSuccess'] as bool,
     );
   }

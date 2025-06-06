@@ -5,6 +5,9 @@ import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_active_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_completed_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
@@ -67,6 +70,9 @@ void main() async {
           getIt<DeleteBoardUsecase>(),
           getIt<FilterLostBoardsUsecase>(),
           getIt<FilterFoundBoardsUsecase>(),
+          getIt<PatchBoardActiveUsecase>(),
+          getIt<PatchBoardCompletedUsecase>(),
+          getIt<PatchBoardUsecase>(),
         )),  
         ChangeNotifierProvider(create: (_) => CommentViewModel(
           getIt<MyCommentsUsecase>(),
