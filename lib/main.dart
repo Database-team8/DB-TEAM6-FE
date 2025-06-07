@@ -1,10 +1,15 @@
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarm_read_usecase.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarms_read_all_usecase.dart';
 import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/board_statuses_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/detailed_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_found_boards_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/filter_lost_boards_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_active_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_completed_usecase.dart';
+import 'package:ajoufinder/domain/usecases/boards/patch_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_found_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/post_lost_board_usecase.dart';
 import 'package:ajoufinder/domain/usecases/condition/conditions_usecase.dart';
@@ -42,6 +47,58 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create:
+              (_) => FilterStateViewModel(
+                getIt<LocationsUsecase>(),
+                getIt<ItemtypesUsecase>(),
+                getIt<BoardStatusesUsecase>(),
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => AuthViewModel(
+                getIt<CookieService>(),
+                getIt<LogoutUsecase>(),
+                getIt<LoginUsecase>(),
+                getIt<ChangePasswordUsecase>(),
+                getIt<ProfileUsecase>(),
+                getIt<SignUpUsecase>(),
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => BoardViewModel(
+                getIt<MyBoardsUsecase>(),
+                getIt<LostBoardsUsecase>(),
+                getIt<FoundBoardsUsecase>(),
+                getIt<DetailedBoardUsecase>(),
+                getIt<PostLostBoardUsecase>(),
+                getIt<PostFoundBoardUsecase>(),
+                getIt<DeleteBoardUsecase>(),
+                getIt<FilterLostBoardsUsecase>(),
+                getIt<FilterFoundBoardsUsecase>(),
+                getIt<PatchBoardActiveUsecase>(),
+                getIt<PatchBoardCompletedUsecase>(),
+                getIt<PatchBoardUsecase>(),
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => AlarmViewModel(
+                getIt<AlarmsUsecase>(),
+                getIt<AlarmReadUsecase>(),
+                getIt<AlarmsReadAllUsecase>(),
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => ConditionViewModel(
+                getIt<ConditionsUsecase>(),
+                getIt<PostConditionUsecase>(),
+                getIt<DeleteConditionUsecase>(),
+              ),
+        ),
         ChangeNotifierProvider(create: (_) => NavigatorBarViewModel()),
         ChangeNotifierProvider(
           create:
@@ -74,11 +131,19 @@ void main() async {
                 getIt<DeleteBoardUsecase>(),
                 getIt<FilterLostBoardsUsecase>(),
                 getIt<FilterFoundBoardsUsecase>(),
+                getIt<PatchBoardActiveUsecase>(),
+                getIt<PatchBoardCompletedUsecase>(),
+                getIt<PatchBoardUsecase>(),
               ),
         ),
         ChangeNotifierProvider(create: (_) => CommentViewModel()), // 인자 없이 생성
         ChangeNotifierProvider(
-          create: (_) => AlarmViewModel(getIt<AlarmsUsecase>()),
+          create:
+              (_) => AlarmViewModel(
+                getIt<AlarmsUsecase>(),
+                getIt<AlarmReadUsecase>(),
+                getIt<AlarmsReadAllUsecase>(),
+              ),
         ),
         ChangeNotifierProvider(
           create:

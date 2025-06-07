@@ -17,11 +17,10 @@ class DeleteConditionUsecase {
 
       if (response.isSuccess) {
         print('조건 삭제 성공 (Usecase): 조건 ID $conditionId');
-        return true;
       } else {
         print('조건 삭제 실패 (Usecase): ${response.message}, 코드: ${response.code}');
-        return false;
       }
+      return response.isSuccess;
     } catch (e) {
       // 리포지토리에서 발생한 예외를 그대로 다시 던지거나,
       // 이 유스케이스에 특화된 예외로 변환하여 던질 수 있습니다.

@@ -84,20 +84,23 @@ class _ConditionCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: theme.colorScheme.surfaceTint),
+          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 6),
           Text(
             '$label: ',
             style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w400,
+              fontSize: 13.5,
             ),
           ),
           Flexible(
             child: Text(
               value,
               style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w400,
+                fontSize: 13.5,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -134,7 +137,7 @@ class _ConditionCard extends StatelessWidget {
                 spacing: 8.0,
                 runSpacing: 8.0,
                 children: [
-                  _buildInfoChip(context, Icons.shopping_bag_outlined, "종류 ID", condition.itemType),
+                  _buildInfoChip(context, Icons.shopping_bag_outlined, "종류", condition.itemType),
                   _buildInfoChip(context, Icons.place_outlined, "지역", locationDisplay),
                 ],
               ),

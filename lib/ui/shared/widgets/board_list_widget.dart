@@ -88,7 +88,7 @@ class _BoardCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Card(
-        elevation: 1,
+        elevation: 12,
         shadowColor: theme.colorScheme.shadow,
         surfaceTintColor: Colors.transparent,
         color: cardBg,
@@ -111,7 +111,7 @@ class _BoardCard extends StatelessWidget {
                   children: [
                     _BoardTitle(title: boardItem.title),
                     const SizedBox(height: 8),
-                    _BoardLocationRow(location: boardItem.status),
+                    _BoardNicknameRow(nickname: boardItem.authorNickname),
                   ],
                 ),
               ),
@@ -229,7 +229,7 @@ class _BoardBookmarkButton extends StatelessWidget {
         ),
         child: Icon(
           Icons.bookmark_border_rounded,
-          color: theme.iconTheme.color ?? Colors.grey[700],
+          color: theme.iconTheme.color,
           size: 24,
         ),
       ),
@@ -257,10 +257,10 @@ class _BoardTitle extends StatelessWidget {
   }
 }
 
-class _BoardLocationRow extends StatelessWidget {
-  final String? location;
+class _BoardNicknameRow extends StatelessWidget {
+  final String? nickname;
 
-  const _BoardLocationRow({this.location});
+  const _BoardNicknameRow({this.nickname});
 
   @override
   Widget build(BuildContext context) {
@@ -268,16 +268,16 @@ class _BoardLocationRow extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          Icons.place_outlined,
-          color: theme.iconTheme.color?.withOpacity(0.6) ?? Colors.grey[500],
-          size: 18,
+          Icons.account_circle_outlined,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: 16,
         ),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
-            location ?? '위치 정보 없음',
+            nickname ?? '별명 정보 없음',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withOpacity(0.85) ?? Colors.grey[700],
+              color: theme.colorScheme.onSurfaceVariant,
               fontSize: 13.5,
               fontWeight: FontWeight.w400,
             ),

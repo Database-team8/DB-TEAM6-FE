@@ -1,9 +1,11 @@
 import 'package:ajoufinder/domain/entities/board.dart';
 import 'package:ajoufinder/ui/shared/widgets/comment_list_widget.dart';
 import 'package:ajoufinder/ui/shared/widgets/custom_comment_fab.dart';
+import 'package:ajoufinder/ui/shared/widgets/post_board_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/auth_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +20,7 @@ class BoardViewWidget extends StatefulWidget {
 
 class _BoardViewWidgetState extends State<BoardViewWidget> {
   late TextEditingController _commentController;
-  bool _isSecretComment = false; // 비밀 댓글 상태
+  bool _isSecretComment = false;
   int? _currentlyDisplayedBoardId;
 
   @override
@@ -80,8 +82,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     FocusScope.of(context).unfocus();
   }
 
-  void _showBoardManageOptions(BuildContext context, Board board) {
-    // 간단한 예시: BottomSheet으로 수정/삭제 옵션 제공
+  void _showBoardManageOptions(Board board) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -95,10 +96,56 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('게시글 수정'),
                 onTap: () {
-                  Navigator.pop(bottomSheetContext); // BottomSheet 닫기
-                  // TODO: 게시글 수정 화면으로 이동 또는 수정 로직 실행
+                  Navigator.pop(bottomSheetContext);
+                  final navigatorBarViewModel =
+                      context.read<NavigatorBarViewModel>();
                   print('게시글 수정 선택: ${board.id}');
-                  // Navigator.push(context, MaterialPageRoute(builder: (_) => EditBoardScreen(board: board)));
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              child: PostBoardWidget(
+                                lostCategory:
+                                    navigatorBarViewModel.currentIndex == 0
+                                        ? 'lost'
+                                        : 'found',
+                                editedBoard: board,
+                              ),
+                            ),
+                          ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.change_circle_outlined),
+                title: const Text('게시글 상태 변경'),
+                onTap: () async {
+                  Navigator.of(bottomSheetContext).pop();
+                  final boardViewModel = context.read<BoardViewModel>();
+                  try {
+                    await boardViewModel.toggleBoardStatus();
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('상태가 변경되었습니다.')));
+                    } else {
+                      return;
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('상태 변경에 실패했습니다: $e')),
+                      );
+                    } else {
+                      return;
+                    }
+                  }
                 },
               ),
               ListTile(
@@ -111,8 +158,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
                 onTap: () async {
-                  Navigator.pop(bottomSheetContext); // BottomSheet 닫기
-                  // 삭제 확인 다이얼로그 표시
+                  Navigator.pop(bottomSheetContext);
                   final bool? confirmDelete = await showDialog<bool>(
                     context: context,
                     builder:
@@ -141,10 +187,20 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                         ),
                   );
                   if (confirmDelete == true) {
-                    // TODO: ViewModel을 통해 게시글 삭제 로직 실행
-                    // await Provider.of<BoardViewModel>(context, listen: false).deleteBoard(board.id);
-                    print('게시글 삭제 실행: ${board.id}');
-                    if (mounted) Navigator.of(context).pop(); // 상세 화면 닫기
+                    final success = await context
+                        .read<BoardViewModel>()
+                        .deleteBoard(board.id);
+
+                    if (mounted) {
+                      if (success) {
+                        print('게시글 삭제 성공. ${board.id}');
+                      } else {
+                        print('게시글 삭제 실패: ${board.id}');
+                      }
+                      Navigator.of(context).pop();
+                    } else {
+                      return;
+                    }
                   }
                 },
               ),
@@ -218,6 +274,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     }
 
     final Board? board = boardViewModel.selectedBoard;
+
     if (board == null) {
       return Scaffold(
         backgroundColor: theme.colorScheme.surface,
@@ -380,7 +437,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     final author = board.user;
     final bool isAuthor =
         (authViewModel.currentUser != null &&
-            author == authViewModel.currentUser!);
+            author.userId == authViewModel.currentUser!.userId);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -395,7 +452,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                 (author.profileImage != null && author.profileImage!.isNotEmpty)
                     ? NetworkImage(author.profileImage!)
                     : null,
-            backgroundColor: theme.colorScheme.surfaceVariant, // 배경색 추가
+            backgroundColor: theme.colorScheme.surfaceTint,
             child:
                 (author.profileImage == null || author.profileImage!.isEmpty)
                     ? Icon(
@@ -437,7 +494,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
               ), // 아이콘 변경
               tooltip: '게시글 관리',
               onPressed: () {
-                _showBoardManageOptions(context, board); // 게시글 관리 옵션 표시
+                _showBoardManageOptions(board);
               },
             ),
         ],

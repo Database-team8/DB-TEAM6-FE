@@ -1,5 +1,5 @@
 import 'package:ajoufinder/data/services/google_map_service.dart';
-import 'package:ajoufinder/domain/entities/location.dart';
+import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/filter_state_view_model.dart';
 import 'package:ajoufinder/ui/viewmodels/navigator_bar_view_model.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +60,7 @@ class _MapScreenState extends State<MapScreen> {
         markerId: MarkerId('팔달관'),
         position: LatLng(37.28448, 127.0444),
         consumeTapEvents: true,
-        onTap: () {
+        onTap: () async {
           if (filterStateViewModel.availableItemTypes.isEmpty) {
             if (mounted) {
               ScaffoldMessenger.of(
@@ -75,13 +75,18 @@ class _MapScreenState extends State<MapScreen> {
           );
           filterStateViewModel.setSelectedLocation(loc);
           navigatorBarViewModel.updateCurrentPage(0);
+
+          await filterStateViewModel.sendQuery(
+            Provider.of<BoardViewModel>(context, listen: false),
+            navigatorBarViewModel.currentIndex,
+          );
         },
       ),
       Marker(
         markerId: MarkerId('중앙도서관'),
         position: LatLng(37.28153, 127.0442),
         consumeTapEvents: true,
-        onTap: () {
+        onTap: () async {
           if (filterStateViewModel.availableItemTypes.isEmpty) {
             if (mounted) {
               ScaffoldMessenger.of(
@@ -96,13 +101,18 @@ class _MapScreenState extends State<MapScreen> {
           );
           filterStateViewModel.setSelectedLocation(loc);
           navigatorBarViewModel.updateCurrentPage(0);
+
+          await filterStateViewModel.sendQuery(
+            Provider.of<BoardViewModel>(context, listen: false),
+            navigatorBarViewModel.currentIndex,
+          );
         },
       ),
       Marker(
         markerId: MarkerId('체육관'),
         position: LatLng(37.27996, 127.0454),
         consumeTapEvents: true,
-        onTap: () {
+        onTap: () async {
           if (filterStateViewModel.availableItemTypes.isEmpty) {
             if (mounted) {
               ScaffoldMessenger.of(
@@ -117,6 +127,11 @@ class _MapScreenState extends State<MapScreen> {
           );
           filterStateViewModel.setSelectedLocation(loc);
           navigatorBarViewModel.updateCurrentPage(0);
+
+          await filterStateViewModel.sendQuery(
+            Provider.of<BoardViewModel>(context, listen: false),
+            navigatorBarViewModel.currentIndex,
+          );
         },
       ),
     };

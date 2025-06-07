@@ -15,7 +15,7 @@ class UserRepositoryImpl extends UserRepository {
   @override
   Future<User> findById(int id) async {
     await Future.delayed(Duration(milliseconds: 500));
-    return User(name: '장한', nickname: '별명');
+    return User(userId: 1, name: '장한', nickname: '별명');
   }
 
   @override

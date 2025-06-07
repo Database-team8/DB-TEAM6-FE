@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ajoufinder/domain/entities/board.dart';
 import 'package:ajoufinder/domain/entities/item_type.dart';
 import 'package:ajoufinder/domain/entities/location.dart';
 import 'package:ajoufinder/ui/shared/widgets/build_generic_dropdown.dart';
@@ -10,7 +11,8 @@ import 'package:provider/provider.dart';
 
 class PostBoardWidget extends StatefulWidget {
   final String lostCategory;
-  const PostBoardWidget({super.key, required this.lostCategory});
+  final Board? editedBoard;
+  const PostBoardWidget({super.key, required this.lostCategory, this.editedBoard});
 
   @override
   State<PostBoardWidget> createState() => _PostBoardWidgetState();
@@ -35,10 +37,34 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _detailedLocationController = TextEditingController();
-    _contentController = TextEditingController();
-    _selectedDate = DateTime.now();
+    _titleController = TextEditingController(text: widget.editedBoard?.title);
+    _detailedLocationController = TextEditingController(text: widget.editedBoard?.detailedLocation);
+    _contentController = TextEditingController(text: widget.editedBoard?.description);
+    _selectedDate = widget.editedBoard?.createdAt ?? DateTime.now();
+    _selectedImageUrl = widget.editedBoard?.image;
+
+    if (widget.editedBoard != null) {
+      final filterStateViewModel = context.read<FilterStateViewModel>();
+
+      if (widget.editedBoard!.location.id != 0) {
+        _selectedLocation = filterStateViewModel.availableLocations.firstWhere(
+          (loc) => loc.id == widget.editedBoard!.location.id,
+        );
+      }
+
+      if (widget.editedBoard!.itemType.id != 0) {
+        _selectedItemType = filterStateViewModel.availableItemTypes.firstWhere(
+          (itemType) => itemType.id == widget.editedBoard!.itemType.id,
+        );
+      } 
+
+      _selectedStatus = filterStateViewModel.availableStatuses.firstWhere(
+        (status) => status == widget.editedBoard!.status
+      );
+
+      _selectedImageUrl = widget.editedBoard!.image;
+      
+    }
   }
 
   @override
@@ -86,7 +112,19 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
         late bool success;
 
         if (widget.lostCategory == 'lost') {
-          success = await boardViewModel.postLostBoard(
+          if (widget.editedBoard != null) {
+            success = await boardViewModel.patchBoard(
+              boardId: widget.editedBoard!.id,
+              title: _titleController.text,
+              detailedLocation: _detailedLocationController.text,
+              description: _contentController.text,
+              relatedDate: _selectedDate!.toIso8601String(),
+              image: '',
+              itemTypeId: _selectedItemType?.id ?? 0,
+              locationId: _selectedLocation?.id ?? 0,
+            );
+          } else {
+            success = await boardViewModel.postLostBoard(
             title: _titleController.text,
             detailedLocation: _detailedLocationController.text,
             description: _contentController.text,
@@ -96,17 +134,31 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
             itemTypeId: _selectedItemType?.id ?? 0,
             locationId: _selectedLocation?.id ?? 0,
           );
+          }
         } else {
-          success = await boardViewModel.postFoundBoard(
-            title: _titleController.text,
-            detailedLocation: _detailedLocationController.text,
-            description: _contentController.text,
-            relatedDate: _selectedDate ?? DateTime.now(),
-            image: '',
-            category: widget.lostCategory.toUpperCase(),
-            itemTypeId: _selectedItemType?.id ?? 0,
-            locationId: _selectedLocation?.id ?? 0,
-          );
+          if (widget.editedBoard != null) {
+            success = await boardViewModel.patchBoard(
+              boardId: widget.editedBoard!.id,
+              title: _titleController.text,
+              detailedLocation: _detailedLocationController.text,
+              description: _contentController.text,
+              relatedDate: _selectedDate!.toIso8601String(),
+              image: '',
+              itemTypeId: _selectedItemType?.id ?? 0,
+              locationId: _selectedLocation?.id ?? 0,
+            );
+          } else {
+            success = await boardViewModel.postFoundBoard(
+              title: _titleController.text,
+              detailedLocation: _detailedLocationController.text,
+              description: _contentController.text,
+              relatedDate: _selectedDate ?? DateTime.now(),
+              image: '',
+              category: widget.lostCategory.toUpperCase(),
+              itemTypeId: _selectedItemType?.id ?? 0,
+              locationId: _selectedLocation?.id ?? 0,
+            );
+          }
         }
 
         if (!mounted) {
