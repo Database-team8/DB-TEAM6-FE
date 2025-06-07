@@ -159,8 +159,6 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final boardViewModel = context.watch<BoardViewModel>();
-    //final currentUserId = context.read<AuthViewModel>().currentUser?.userId; // userId 받아오는게 어디에도 없는데 해결방법 생각해보기
-    final int currentUserId = 4; // 임시 사용자 ID
 
     if (boardViewModel.isLoadingBoardDetails &&
         boardViewModel.selectedBoard == null) {
@@ -290,10 +288,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                 16.0,
                 16.0,
               ), // 댓글 목록 위아래 패딩 조정
-              child: CommentListWidget.forBoard(
-                boardId: board.id,
-                currentUserId: currentUserId,
-              ),
+              child: CommentListWidget.forBoard(boardId: board.id),
             ),
             const SizedBox(height: 80), // FAB 공간 확보
           ],

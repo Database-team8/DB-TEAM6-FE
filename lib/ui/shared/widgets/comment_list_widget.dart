@@ -9,16 +9,9 @@ import 'package:ajoufinder/injection_container.dart';
 
 class CommentListWidget extends StatefulWidget {
   final int? boardId;
-  final int? currentUserId;
 
-  const CommentListWidget.forBoard({
-    super.key,
-    required this.boardId,
-    required this.currentUserId,
-  });
-  const CommentListWidget.forCurrentUser({super.key})
-    : boardId = null,
-      currentUserId = null;
+  const CommentListWidget.forBoard({super.key, required this.boardId});
+  const CommentListWidget.forCurrentUser({super.key}) : boardId = null;
 
   @override
   State<CommentListWidget> createState() => _CommentListWidgetState();
@@ -26,6 +19,7 @@ class CommentListWidget extends StatefulWidget {
 
 class _CommentListWidgetState extends State<CommentListWidget> {
   Future<User>? _currentUserFuture;
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -34,9 +28,25 @@ class _CommentListWidgetState extends State<CommentListWidget> {
 
     if (widget.boardId != null) {
       viewModel.fetchComments(widget.boardId!);
-    }
+      // ✅ 로그인 사용자 정보 조회
+      _currentUserFuture = getIt<AuthRepository>()
+          .getCurrentUserProfile()
+          .then((res) {
+            final userId = res.result?.userId;
+            print('[DEBUG] getCurrentUserProfile 응답 결과: ${res.result}');
+            print('[DEBUG] 추출된 userId: $userId');
 
-    if (widget.boardId == null) {
+            setState(() {
+              _currentUserId = userId;
+              print('[DEBUG] setState 이후 _currentUserId 값: $_currentUserId');
+            });
+
+            return res.result!;
+          })
+          .catchError((e) {
+            print('[ERROR] 사용자 정보 조회 실패: $e');
+          });
+    } else {
       _currentUserFuture = getIt<AuthRepository>().getCurrentUserProfile().then(
         (res) => res.result!,
       );
@@ -60,10 +70,15 @@ class _CommentListWidgetState extends State<CommentListWidget> {
     final viewModel = Provider.of<CommentViewModel>(context);
     final theme = Theme.of(context);
 
-    if (viewModel.isLoading) {
+    // ✅ (1) currentUserId가 null이면 기다리기
+    if (widget.boardId != null && _currentUserId == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // ✅ (2) 댓글 로딩 중이면 표시
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (widget.boardId == null) {
       final userComments = viewModel.userComments;
       if (userComments.isEmpty) {
@@ -79,10 +94,10 @@ class _CommentListWidgetState extends State<CommentListWidget> {
           return _CommentCard(
             content: comment.content,
             createdAt: comment.createdAt,
-            userId: widget.currentUserId,
+            userId: null,
             nickname: null,
             profileImage: null,
-            currentUserId: widget.currentUserId,
+            currentUserId: null,
             boardId: widget.boardId,
             commentId: comment.commentId,
             currentUserFuture: _currentUserFuture,
@@ -106,7 +121,7 @@ class _CommentListWidgetState extends State<CommentListWidget> {
             userId: comment.userId,
             nickname: comment.user.nickname,
             profileImage: comment.user.profileImage,
-            currentUserId: widget.currentUserId,
+            currentUserId: _currentUserId,
             commentId: comment.commentId,
             boardId: widget.boardId!,
           );
