@@ -113,7 +113,16 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
 
         if (widget.lostCategory == 'lost') {
           if (widget.editedBoard != null) {
-
+            success = await boardViewModel.patchBoard(
+              boardId: widget.editedBoard!.id,
+              title: _titleController.text,
+              detailedLocation: _detailedLocationController.text,
+              description: _contentController.text,
+              relatedDate: _selectedDate!.toIso8601String(),
+              image: '',
+              itemTypeId: _selectedItemType?.id ?? 0,
+              locationId: _selectedLocation?.id ?? 0,
+            );
           } else {
             success = await boardViewModel.postLostBoard(
             title: _titleController.text,
@@ -128,7 +137,16 @@ class _PostBoardWidgetState extends State<PostBoardWidget> {
           }
         } else {
           if (widget.editedBoard != null) {
-            
+            success = await boardViewModel.patchBoard(
+              boardId: widget.editedBoard!.id,
+              title: _titleController.text,
+              detailedLocation: _detailedLocationController.text,
+              description: _contentController.text,
+              relatedDate: _selectedDate!.toIso8601String(),
+              image: '',
+              itemTypeId: _selectedItemType?.id ?? 0,
+              locationId: _selectedLocation?.id ?? 0,
+            );
           } else {
             success = await boardViewModel.postFoundBoard(
               title: _titleController.text,

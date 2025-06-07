@@ -51,66 +51,6 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     });
   }
 
-  Future<void> _sendQuery() async {
-    final filterStateViewModel = context.read<FilterStateViewModel>();
-
-    if (filterStateViewModel.selectedLocation == null &&
-        filterStateViewModel.selectedItemType == null &&
-        filterStateViewModel.selectedStatus == null &&
-        filterStateViewModel.startDate == null &&
-        filterStateViewModel.endDate == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('적어도 하나의 필터를 선택해야 합니다.')));
-      }
-      return;
-    }
-
-    if (filterStateViewModel.startDate != null &&
-        filterStateViewModel.endDate != null &&
-        filterStateViewModel.startDate!.isAfter(filterStateViewModel.endDate!)) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('시작 날짜는 종료 날짜보다 이전이어야 합니다.')));
-      }
-      return;
-    }
-
-    final boardViewModel = Provider.of<BoardViewModel>(context, listen: false);
-    final navigatorBarViewModel = Provider.of<NavigatorBarViewModel>(
-      context,
-      listen: false,
-    );
-
-    try {
-      if (navigatorBarViewModel.currentIndex == 0) {
-        await boardViewModel.fetchFilteredLostBoards(
-          locationId: filterStateViewModel.selectedLocation?.id,
-          itemTypeId: filterStateViewModel.selectedItemType?.id,
-          status: filterStateViewModel.selectedStatus,
-          startDate: filterStateViewModel.startDate,
-          endDate: filterStateViewModel.endDate,
-        );
-      } else if (navigatorBarViewModel.currentIndex == 1) {
-        await boardViewModel.fetchFilteredFoundBoards(
-          locationId: filterStateViewModel.selectedLocation?.id,
-          itemTypeId: filterStateViewModel.selectedItemType?.id,
-          status: filterStateViewModel.selectedStatus,
-          startDate: filterStateViewModel.startDate,
-          endDate: filterStateViewModel.endDate,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('게시글 필터링 중 오류 발생: $e')));
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -118,7 +58,18 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     final pageViewModel = context.watch<PageViewModel>();
     final filterStateViewModel = context.watch<FilterStateViewModel>();
 
-    return Scaffold(
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    final error = filterStateViewModel.filterError;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
+  });
+
+    return filterStateViewModel.isFiltering 
+    ? const Center(child: CircularProgressIndicator())
+    : Scaffold(
       appBar: PreferredSize(
         preferredSize:
             pageViewModel.extendAppbar
@@ -161,7 +112,10 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                                     emptyText: '위치 정보 없음',
                                     labelBuilder: (loc) => loc.locationName,
                                     onChanged: (newValue) => filterStateViewModel.setSelectedLocation(newValue),
-                                    onChangedAsync: _sendQuery,
+                                    onChangedAsync: () => filterStateViewModel.sendQuery(
+                                      context.read<BoardViewModel>(),
+                                      context.read<NavigatorBarViewModel>().currentIndex,
+                                    ),
                                     theme: theme,
                                   ),
 
@@ -177,7 +131,10 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                                     emptyText: '종류 정보 없음',
                                     labelBuilder: (type) => type.itemType,
                                     onChanged: (newValue) => filterStateViewModel.setSelectedItemType(newValue),
-                                    onChangedAsync: _sendQuery,
+                                    onChangedAsync: () => filterStateViewModel.sendQuery(
+                                      context.read<BoardViewModel>(),
+                                      context.read<NavigatorBarViewModel>().currentIndex,
+                                    ),
                                     theme: theme,
                                   ),
 
@@ -191,7 +148,10 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
                                     emptyText: '상태 정보 없음',
                                     labelBuilder: (status) => status,
                                     onChanged: (newValue) => filterStateViewModel.setSelectedStatus(newValue),
-                                    onChangedAsync: _sendQuery,
+                                    onChangedAsync: () => filterStateViewModel.sendQuery(
+                                      context.read<BoardViewModel>(),
+                                      context.read<NavigatorBarViewModel>().currentIndex,
+                                    ),
                                     theme: theme,
                                   ),
                                   const SizedBox(width: 8),
@@ -339,7 +299,10 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
 
       if (picked != null && picked != filterStateViewModel.startDate) {
       filterStateViewModel.setStartDate(picked);
-      await _sendQuery();
+      await filterStateViewModel.sendQuery(
+        context.read<BoardViewModel>(),
+        context.read<NavigatorBarViewModel>().currentIndex,
+      );
     }
     } else {
       return;
@@ -358,7 +321,10 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
 
       if (picked != null && picked != filterStateViewModel.endDate) {
       filterStateViewModel.setEndDate(picked);
-      await _sendQuery();
+      await filterStateViewModel.sendQuery(
+        context.read<BoardViewModel>(),
+        context.read<NavigatorBarViewModel>().currentIndex,
+      );
     }
     } else {
       return;

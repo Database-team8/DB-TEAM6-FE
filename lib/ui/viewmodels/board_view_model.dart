@@ -410,4 +410,48 @@ class BoardViewModel extends ChangeNotifier{
       print('게시글 상태 토글 중 오류: $e');
     }
   }
+
+  Future<bool> patchBoard({
+    required int boardId,
+    String? title,
+    int? locationId,
+    int? itemTypeId,
+    String? description,
+    String? detailedLocation,
+    String? image,
+    String? relatedDate,
+    }) async {
+      _setPosting(true);
+      _postError = null;
+      bool success = false;
+
+      try {
+        success = await _patchBoardUsecase.execute(
+          boardId: boardId,
+          title: title,
+          locationId: locationId,
+          itemTypeId: itemTypeId,
+          description: description,
+          detailedLocation: detailedLocation,
+          image: image,
+          relatedDate: relatedDate,
+        );
+
+        if (success) {
+          print('BoardViewModel: 게시글 수정 성공 - ID: $boardId');
+        } else {
+          _postError = '게시글 수정에 실패했습니다.';
+          print('BoardViewModel: 게시글 수정 실패');
+        }
+      } on ArgumentError catch (e) {
+      _postError = e.message;
+      _isPosting = false;
+    } catch (e) {
+      _postError = '게시글 등록에 실패했습니다. 잠시 후 다시 시도해주세요. : $e';
+      _isPosting = false;
+    } finally {
+      _setPosting(false);
+    }
+    return success;
+  }
 }

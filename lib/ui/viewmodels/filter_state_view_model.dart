@@ -3,6 +3,7 @@ import 'package:ajoufinder/domain/entities/location.dart';
 import 'package:ajoufinder/domain/usecases/boards/board_statuses_usecase.dart';
 import 'package:ajoufinder/domain/usecases/itemtype/itemtypes_usecase.dart';
 import 'package:ajoufinder/domain/usecases/location/locations_usecase.dart';
+import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:flutter/widgets.dart';
 
 class FilterStateViewModel extends ChangeNotifier{
@@ -24,10 +25,12 @@ class FilterStateViewModel extends ChangeNotifier{
   bool _isLoadingLocations = false;
   bool _isLoadingItemTypes = false;
   bool _isLoadingStatuses = false;
+  bool _isFiltering = false;
 
   String? _locationsError;
   String? _itemTypesError;
   String? _statusesError;
+  String? _filterError;
 
   Location? _selectedLocation;
   ItemType? _selectedItemType;
@@ -42,10 +45,12 @@ class FilterStateViewModel extends ChangeNotifier{
   bool get isLoadingLocations => _isLoadingLocations;
   bool get isLoadingItemTypes => _isLoadingItemTypes;
   bool get isLoadingStatuses => _isLoadingStatuses;
+  bool get isFiltering => _isFiltering;
 
   String? get locationsError => _locationsError;
   String? get itemTypesError => _itemTypesError;
   String? get statusesError => _statusesError;
+  String? get filterError => _filterError;
 
   Location? get selectedLocation => _selectedLocation;
   ItemType? get selectedItemType => _selectedItemType;
@@ -134,6 +139,13 @@ class FilterStateViewModel extends ChangeNotifier{
     }
   }
 
+  void _setFiltering(bool filtering) {
+    if (_isFiltering != filtering) {
+      _isFiltering = filtering;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchItemTypes() async {
     _clearItemTypes();
     _setLoadingItemTypes(true);
@@ -196,5 +208,54 @@ class FilterStateViewModel extends ChangeNotifier{
     _availableStatuses = [];
     _selectedStatus = null;
     _statusesError = null;
+  }
+
+    Future<void> sendQuery(BoardViewModel boardViewModel, int currentIndex) async {
+    
+    _filterError = null;
+    _setFiltering(true);
+
+    // 입력 검증
+    if (_selectedLocation == null &&
+        _selectedItemType == null &&
+        _selectedStatus == null &&
+        _startDate == null &&
+        _endDate == null) {
+      _filterError = '적어도 하나의 필터를 선택해야 합니다.';
+      _isFiltering = false;
+      notifyListeners();
+      return;
+    }
+    if (_startDate != null && _endDate != null && _startDate!.isAfter(_endDate!)) {
+      _filterError = '시작 날짜는 종료 날짜보다 이전이어야 합니다.';
+      _isFiltering = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      if (currentIndex == 0) {
+        await boardViewModel.fetchFilteredLostBoards(
+          locationId: _selectedLocation?.id,
+          itemTypeId: _selectedItemType?.id,
+          status: _selectedStatus,
+          startDate: _startDate,
+          endDate: _endDate,
+        );
+      } else if (currentIndex == 1) {
+        await boardViewModel.fetchFilteredFoundBoards(
+          locationId: _selectedLocation?.id,
+          itemTypeId: _selectedItemType?.id,
+          status: _selectedStatus,
+          startDate: _startDate,
+          endDate: _endDate,
+        );
+      }
+      _filterError = null;
+    } catch (e) {
+      _filterError = '게시글 필터링 중 오류 발생: $e';
+    } finally {
+      _setFiltering(false);
+    }
   }
 }
