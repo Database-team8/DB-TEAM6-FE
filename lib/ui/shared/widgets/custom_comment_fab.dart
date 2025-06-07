@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:ajoufinder/data/dto/comment/post_comment/post_comment_request.dart';
+import 'package:ajoufinder/data/dto/comment/update_comment/update_comment_request.dart';
 
 class CustomCommentFab extends StatefulWidget {
   final int boardId;
-  final bool isSecret; // ← 추가!
+  final bool isSecret;
   final Widget? leadingWidget;
   final VoidCallback onMorePressed;
   final Widget mainContentWhenCollapsed;
@@ -17,6 +18,9 @@ class CustomCommentFab extends StatefulWidget {
 
   final TextEditingController commentController;
   final FocusNode? commentFocusNode;
+
+  /// ✅ 수정 모드일 경우 commentId 지정
+  final int? editingCommentId;
 
   const CustomCommentFab({
     super.key,
@@ -37,6 +41,7 @@ class CustomCommentFab extends StatefulWidget {
     this.foregroundColor,
     required this.commentController,
     this.commentFocusNode,
+    this.editingCommentId, // ✅ 추가
   });
 
   @override
@@ -62,6 +67,12 @@ class _CustomCommentFabState extends State<CustomCommentFab>
     ).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
+    // 수정 모드면 자동 펼침
+    if (widget.editingCommentId != null) {
+      _isExpanded = true;
+      _animationController.forward();
+    }
   }
 
   @override
@@ -95,17 +106,29 @@ class _CustomCommentFabState extends State<CustomCommentFab>
         listen: false,
       );
 
-      commentViewModel
-          .postComment(
-            widget.boardId,
-            PostCommentRequest(content: commentText, isSecret: widget.isSecret),
-          )
-          .then((_) {
-            commentViewModel.fetchComments(widget.boardId); // 댓글 목록 새로고침
-          });
+      if (widget.editingCommentId != null) {
+        // ✅ 수정 모드
+        final request = UpdateCommentRequest(
+          content: commentText,
+          isSecret: widget.isSecret, // ✅ 추가
+        );
+        commentViewModel
+            .updateComment(widget.boardId, widget.editingCommentId!, request)
+            .then((_) => commentViewModel.fetchComments(widget.boardId));
+      } else {
+        // ✅ 작성 모드
+        final request = PostCommentRequest(
+          content: commentText,
+          isSecret: widget.isSecret,
+        );
+        commentViewModel
+            .postComment(widget.boardId, request)
+            .then((_) => commentViewModel.fetchComments(widget.boardId));
+      }
 
       widget.commentController.clear();
     }
+
     _toggleExpand();
   }
 

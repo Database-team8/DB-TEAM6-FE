@@ -79,7 +79,7 @@ class CommentRepositoryImpl implements CommentRepository {
     UpdateCommentRequest request,
   ) async {
     final uri = Uri.parse('$baseUrl/comments/$boardId/$commentId');
-    final response = await client.put(
+    final response = await client.patch(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(request.toJson()),

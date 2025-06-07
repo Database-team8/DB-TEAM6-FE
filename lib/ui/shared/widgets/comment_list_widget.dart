@@ -6,6 +6,7 @@ import 'package:ajoufinder/domain/entities/comment.dart';
 import 'package:ajoufinder/domain/entities/user.dart';
 import 'package:ajoufinder/domain/repository/auth_repository.dart';
 import 'package:ajoufinder/injection_container.dart';
+import 'package:ajoufinder/ui/shared/widgets/custom_comment_fab.dart';
 
 class CommentListWidget extends StatefulWidget {
   final int? boardId;
@@ -101,6 +102,7 @@ class _CommentListWidgetState extends State<CommentListWidget> {
             boardId: widget.boardId,
             commentId: comment.commentId,
             currentUserFuture: _currentUserFuture,
+            isSecret: comment.isSecret,
           );
         },
         separatorBuilder: (_, __) => const Divider(height: 1),
@@ -124,6 +126,7 @@ class _CommentListWidgetState extends State<CommentListWidget> {
             currentUserId: _currentUserId,
             commentId: comment.commentId,
             boardId: widget.boardId!,
+            isSecret: comment.isSecret,
           );
         },
         separatorBuilder: (_, __) => const Divider(height: 1),
@@ -142,6 +145,7 @@ class _CommentCard extends StatefulWidget {
   final int? boardId;
   final int commentId;
   final Future<User>? currentUserFuture;
+  final bool isSecret;
 
   const _CommentCard({
     required this.content,
@@ -153,6 +157,7 @@ class _CommentCard extends StatefulWidget {
     this.profileImage,
     required this.currentUserId,
     this.currentUserFuture,
+    required this.isSecret,
   });
 
   @override
@@ -206,8 +211,91 @@ class _CommentCardState extends State<_CommentCard> {
                   IconButton(
                     icon: const Icon(Icons.edit, size: 16),
                     onPressed: () {
-                      final viewModel = context.read<CommentViewModel>();
-                      print('수정 클릭: ${widget.userId}');
+                      final theme = Theme.of(context);
+                      final controller = TextEditingController(
+                        text: widget.content,
+                      );
+
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent, // ✅ 작성용과 통일
+                        builder:
+                            (_) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom +
+                                    16,
+                                left: 16,
+                                right: 16,
+                              ),
+                              child: CustomCommentFab(
+                                boardId: widget.boardId!,
+                                isSecret: widget.isSecret,
+                                commentController: controller,
+                                editingCommentId:
+                                    widget.commentId, // ✅ 수정 모드임을 명시
+                                collapsedHeight: 56.0, // ✅ 작성용과 동일
+                                backgroundColor:
+                                    ElevationOverlay.colorWithOverlay(
+                                      // ✅ 동일 배경
+                                      theme.colorScheme.surface,
+                                      theme.colorScheme.primary,
+                                      3.0,
+                                    ),
+                                leadingWidget: Row(
+                                  // ✅ 체크박스 포함 라벨 일치
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Transform.scale(
+                                      scale: 0.8,
+                                      child: Checkbox(
+                                        value: widget.isSecret,
+                                        onChanged: null, // ✅ 수정 중 비활성화
+                                        activeColor:
+                                            theme.colorScheme.surfaceTint,
+                                        checkColor:
+                                            theme.colorScheme.onSurfaceVariant,
+                                        visualDensity: VisualDensity.compact,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        side: BorderSide(
+                                          color: (theme.colorScheme.onSurface)
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(),
+                                      child: Text(
+                                        widget.isSecret ? '비밀댓글' : '일반댓글',
+                                        style: theme.textTheme.labelSmall!
+                                            .copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color:
+                                                  theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                mainContentWhenCollapsed: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                  ),
+                                  child: Text(
+                                    '댓글을 수정합니다...', // ✅ 작성과는 문구만 다르게
+                                    style: theme.textTheme.bodyMedium!.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                                onMorePressed: () {}, // 선택적
+                              ),
+                            ),
+                      );
                     },
                     visualDensity: const VisualDensity(
                       horizontal: -4,
