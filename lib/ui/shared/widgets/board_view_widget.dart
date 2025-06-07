@@ -79,8 +79,6 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     FocusScope.of(context).unfocus();
   }
 
-  Future<void> _handleDeleteBoard() async {}
-
   void _showBoardManageOptions(Board board) {
     showModalBottomSheet(
       context: context,
