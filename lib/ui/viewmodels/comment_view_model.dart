@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ajoufinder/data/dto/comment/comment_dto.dart';
 import 'package:ajoufinder/data/dto/comment/fetch_comments/comments_request.dart';
-import 'package:ajoufinder/data/dto/comment/fetch_comments/comments_response.dart';
 import 'package:ajoufinder/data/dto/comment/post_comment/post_comment_request.dart';
-import 'package:ajoufinder/data/dto/comment/post_comment/post_comment_response.dart';
 import 'package:ajoufinder/data/dto/comment/update_comment/update_comment_request.dart';
-import 'package:ajoufinder/data/dto/comment/update_comment/update_comment_response.dart';
 import 'package:ajoufinder/data/dto/comment/user_comments/user_comments_request.dart';
 import 'package:ajoufinder/data/dto/comment/user_comments/user_comments_response.dart';
-import 'package:ajoufinder/data/services/repository_impls/comment_repository_impl.dart';
 import 'package:ajoufinder/domain/repository/comment_repository.dart';
 import 'package:ajoufinder/injection_container.dart';
 
@@ -33,12 +29,6 @@ class CommentViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  void _setError(String? message) {
-    _error = message;
-    notifyListeners();
-  }
-
   void _clearComments() {
     _comments = [];
     _userComments = [];
@@ -46,8 +36,10 @@ class CommentViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchComments(int boardId, {int page = 0, int size = 10}) async {
+    _clearComments();
     print('[ViewModel] fetchComments() 호출됨 → boardId: $boardId');
     _setLoading(true);
+
     try {
       final response = await _repository.fetchComments(
         boardId,
@@ -60,13 +52,10 @@ class CommentViewModel extends ChangeNotifier {
       for (final comment in _comments) {
         print('[ViewModel] 댓글 내용: ${comment.content}');
       }
-
-      _setError(null);
-      notifyListeners();
+      _error = null;
     } catch (e) {
       print('[ViewModel] 댓글 불러오기 예외 발생: $e');
-      _setError('댓글을 불러오는 중 오류가 발생했습니다.');
-      notifyListeners();
+      _error = '댓글을 불러오는 중 오류가 발생했습니다.';
     } finally {
       _setLoading(false);
     }
@@ -88,11 +77,10 @@ class CommentViewModel extends ChangeNotifier {
           '[ViewModel] 댓글 ID: ${comment.commentId}, 내용: ${comment.content}',
         );
       }
-
-      _setError(null);
+      _error = null;
     } catch (e) {
       print('[ViewModel] 댓글 불러오기 예외 발생: $e');
-      _setError('내 댓글을 불러오는 중 오류가 발생했습니다.');
+      _error = '내 댓글을 불러오는 중 오류가 발생했습니다.';
     } finally {
       _setLoading(false);
     }
@@ -101,11 +89,12 @@ class CommentViewModel extends ChangeNotifier {
   /// 댓글 작성
   Future<void> postComment(int boardId, PostCommentRequest request) async {
     _setLoading(true);
+    _error = null;
     try {
       await _repository.postComment(boardId, request);
       await fetchComments(boardId); // 작성 후 갱신
     } catch (e) {
-      _setError('댓글 작성 중 오류가 발생했습니다.');
+      _error = '댓글 작성 중 오류가 발생했습니다.';
     } finally {
       _setLoading(false);
     }
@@ -122,7 +111,7 @@ class CommentViewModel extends ChangeNotifier {
       await _repository.updateComment(boardId, commentId, request);
       await fetchComments(boardId); // 수정 후 갱신
     } catch (e) {
-      _setError('댓글 수정 중 오류가 발생했습니다.');
+      _error = '댓글 수정 중 오류가 발생했습니다.';
     } finally {
       _setLoading(false);
     }
@@ -131,11 +120,13 @@ class CommentViewModel extends ChangeNotifier {
   /// 댓글 삭제
   Future<void> deleteComment(int boardId, int commentId) async {
     _setLoading(true);
+    _error = null;
+
     try {
       await _repository.deleteComment(boardId, commentId);
-      await fetchComments(boardId); // 삭제 후 갱신
+      await fetchComments(boardId); 
     } catch (e) {
-      _setError('댓글 삭제 중 오류가 발생했습니다.');
+      _error = '댓글 삭제 중 오류가 발생했습니다.';
     } finally {
       _setLoading(false);
     }

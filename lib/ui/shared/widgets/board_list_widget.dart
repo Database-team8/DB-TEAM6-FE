@@ -1,7 +1,6 @@
 import 'package:ajoufinder/domain/entities/board_item.dart';
 import 'package:ajoufinder/ui/shared/widgets/board_view_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
-import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -82,8 +81,6 @@ class _BoardCard extends StatelessWidget {
     final theme = Theme.of(context);
     final Color cardBg = theme.colorScheme.surface;
     final Color borderColor = theme.dividerColor.withValues(alpha: 0.7);
-
-    final commentViewModelForSubmit = Provider.of<CommentViewModel>(context, listen: false);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),

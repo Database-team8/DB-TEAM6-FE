@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
-import 'package:ajoufinder/data/dto/comment/post_comment/post_comment_request.dart';
-import 'package:ajoufinder/data/dto/comment/update_comment/update_comment_request.dart';
 
 class CustomCommentFab extends StatefulWidget {
   final int boardId;
   final bool isSecret;
   final Widget? leadingWidget;
   final VoidCallback onMorePressed;
+  final void Function(String commentText)? onCommentSubmitted;
   final Widget mainContentWhenCollapsed;
   final double collapsedHeight;
   final double expandedHeight;
@@ -19,7 +16,7 @@ class CustomCommentFab extends StatefulWidget {
   final TextEditingController commentController;
   final FocusNode? commentFocusNode;
 
-  /// ✅ 수정 모드일 경우 commentId 지정
+  // ✅ 수정 모드일 경우 commentId 지정
   final int? editingCommentId;
 
   const CustomCommentFab({
@@ -41,7 +38,8 @@ class CustomCommentFab extends StatefulWidget {
     this.foregroundColor,
     required this.commentController,
     this.commentFocusNode,
-    this.editingCommentId, // ✅ 추가
+    this.editingCommentId, 
+    this.onCommentSubmitted,
   });
 
   @override
@@ -100,35 +98,10 @@ class _CustomCommentFabState extends State<CustomCommentFab>
 
   void _submitAndCollapse() {
     final commentText = widget.commentController.text.trim();
-    if (commentText.isNotEmpty) {
-      final commentViewModel = Provider.of<CommentViewModel>(
-        context,
-        listen: false,
-      );
-
-      if (widget.editingCommentId != null) {
-        // ✅ 수정 모드
-        final request = UpdateCommentRequest(
-          content: commentText,
-          isSecret: widget.isSecret, // ✅ 추가
-        );
-        commentViewModel
-            .updateComment(widget.boardId, widget.editingCommentId!, request)
-            .then((_) => commentViewModel.fetchComments(widget.boardId));
-      } else {
-        // ✅ 작성 모드
-        final request = PostCommentRequest(
-          content: commentText,
-          isSecret: widget.isSecret,
-        );
-        commentViewModel
-            .postComment(widget.boardId, request)
-            .then((_) => commentViewModel.fetchComments(widget.boardId));
-      }
-
-      widget.commentController.clear();
+    if (commentText.isNotEmpty) {  
+      widget.onCommentSubmitted?.call(commentText);
+      widget.commentController.clear(); 
     }
-
     _toggleExpand();
   }
 

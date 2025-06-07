@@ -60,26 +60,17 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     super.dispose();
   }
 
-  void _submitComment(BuildContext context, int boardId) {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final commentViewModel = Provider.of<CommentViewModel>(
-      context,
-      listen: false,
-    );
-    final currentUser = authViewModel.currentUser;
+  void _submitComment(BuildContext context, int boardId, String commentText) async {
+    final authViewModel = context.read<AuthViewModel>();
+    final commentViewModel = context.read<CommentViewModel>();
 
-    if (_commentController.text.isNotEmpty && currentUser != null) {
-      commentViewModel.postComment(
-        boardId,
-        PostCommentRequest(
-          content: _commentController.text,
-          isSecret: _isSecretComment,
-        ),
-      );
+    if (commentText.isNotEmpty && authViewModel.currentUser != null) {
+      await commentViewModel.postComment(boardId, PostCommentRequest(content: commentText, isSecret: _isSecretComment));
       _commentController.clear();
+      setState(() {
+        _isSecretComment = false;
+      });
     }
-
-    FocusScope.of(context).unfocus();
   }
 
   void _showBoardManageOptions(Board board) {
@@ -216,6 +207,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     final theme = Theme.of(context);
     final boardViewModel = context.watch<BoardViewModel>();
 
+
     if (boardViewModel.isLoadingBoardDetails &&
         boardViewModel.selectedBoard == null) {
       return Scaffold(
@@ -273,7 +265,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
       );
     }
 
-    final Board? board = boardViewModel.selectedBoard;
+    final board = boardViewModel.selectedBoard;
 
     if (board == null) {
       return Scaffold(
@@ -334,7 +326,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
             Divider(
               height: 32.0, // 간격 조정
               thickness: 0.8,
-              color: theme.dividerColor.withOpacity(0.5),
+              color: theme.dividerColor,
               indent: 16.0,
               endIndent: 16.0,
             ),
@@ -611,6 +603,9 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
       boardId: boardId,
       isSecret: _isSecretComment,
       commentController: _commentController,
+      onCommentSubmitted : (commentText) {
+        _submitComment(context, boardId, commentText);
+      },
       leadingWidget: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
