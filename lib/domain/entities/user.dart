@@ -1,11 +1,13 @@
 class User {
-  final String name; 
+  final int? userId;
+  final String name;
   final String nickname;
   final String? description;
   final String? profileImage;
   final String? phoneNumber;
 
   User({
+    this.userId,
     required this.name,
     required this.nickname,
     this.description,
@@ -15,6 +17,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
+      userId: json['user_id'] as int?,
       name: json['name'] as String,
       nickname: json['nickname'] as String,
       description: json['description'] as String?,
@@ -23,11 +26,11 @@ class User {
     );
   }
 
-    Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
-      'name': name,
-      'nickname': nickname,
-    };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {'name': name, 'nickname': nickname};
+    if (userId != null) {
+      data['user_id'] = userId;
+    }
     if (description != null) {
       data['description'] = description;
     }

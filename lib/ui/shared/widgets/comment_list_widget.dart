@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ajoufinder/ui/viewmodels/comment_view_model.dart';
 import 'package:ajoufinder/domain/entities/comment.dart';
 import 'package:ajoufinder/domain/entities/user.dart';
-import 'package:ajoufinder/domain/repository/user_repository.dart';
+import 'package:ajoufinder/domain/repository/auth_repository.dart';
 import 'package:ajoufinder/injection_container.dart';
 
 class CommentListWidget extends StatefulWidget {
@@ -25,6 +25,8 @@ class CommentListWidget extends StatefulWidget {
 }
 
 class _CommentListWidgetState extends State<CommentListWidget> {
+  Future<User>? _currentUserFuture;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +34,12 @@ class _CommentListWidgetState extends State<CommentListWidget> {
 
     if (widget.boardId != null) {
       viewModel.fetchComments(widget.boardId!);
+    }
+
+    if (widget.boardId == null) {
+      _currentUserFuture = getIt<AuthRepository>().getCurrentUserProfile().then(
+        (res) => res.result!,
+      );
     }
   }
 
@@ -58,8 +66,9 @@ class _CommentListWidgetState extends State<CommentListWidget> {
 
     if (widget.boardId == null) {
       final userComments = viewModel.userComments;
-      if (userComments.isEmpty)
+      if (userComments.isEmpty) {
         return const Center(child: Text('내가 작성한 댓글이 없습니다.'));
+      }
 
       return ListView.separated(
         shrinkWrap: true,
@@ -70,15 +79,16 @@ class _CommentListWidgetState extends State<CommentListWidget> {
           return _CommentCard(
             content: comment.content,
             createdAt: comment.createdAt,
-            // userId: comment.userId,
+            userId: widget.currentUserId,
             nickname: null,
             profileImage: null,
             currentUserId: widget.currentUserId,
             boardId: widget.boardId,
             commentId: comment.commentId,
+            currentUserFuture: _currentUserFuture,
           );
         },
-        separatorBuilder: (_, __) => Divider(height: 1),
+        separatorBuilder: (_, __) => const Divider(height: 1),
       );
     } else {
       final comments = viewModel.comments;
@@ -98,10 +108,10 @@ class _CommentListWidgetState extends State<CommentListWidget> {
             profileImage: comment.user.profileImage,
             currentUserId: widget.currentUserId,
             commentId: comment.commentId,
-            boardId: widget.boardId!, // boardId는 null이 아닌 경우만 여기 도달함
+            boardId: widget.boardId!,
           );
         },
-        separatorBuilder: (_, __) => Divider(height: 1),
+        separatorBuilder: (_, __) => const Divider(height: 1),
       );
     }
   }
@@ -116,6 +126,7 @@ class _CommentCard extends StatefulWidget {
   final int? currentUserId;
   final int? boardId;
   final int commentId;
+  final Future<User>? currentUserFuture;
 
   const _CommentCard({
     required this.content,
@@ -126,6 +137,7 @@ class _CommentCard extends StatefulWidget {
     this.nickname,
     this.profileImage,
     required this.currentUserId,
+    this.currentUserFuture,
   });
 
   @override
@@ -134,17 +146,17 @@ class _CommentCard extends StatefulWidget {
 
 class _CommentCardState extends State<_CommentCard> {
   Future<User>? _userFuture;
-  bool _isEditing = false;
   late TextEditingController _editController;
 
   @override
   void initState() {
     super.initState();
 
-    _userFuture =
-        null; //여기서 _userFuture = getIt<UserRepository>().getUserById(widget.userId!); 이런식으로 userId를 가져와서 userId에 따른 프로필사진이나 이름을 가져오는 것 같은데 추가구현필요
+    if (widget.nickname == null && widget.currentUserFuture != null) {
+      _userFuture = widget.currentUserFuture;
+    }
 
-    _editController = TextEditingController(text: widget.content); // 초기값 설정
+    _editController = TextEditingController(text: widget.content);
   }
 
   @override
@@ -157,6 +169,10 @@ class _CommentCardState extends State<_CommentCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    print(
+      '[CommentCard] comment.userId: ${widget.userId}, currentUserId: ${widget.currentUserId}',
+    );
+
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Column(
@@ -165,7 +181,6 @@ class _CommentCardState extends State<_CommentCard> {
           _buildHeader(theme),
           const SizedBox(height: 6),
           Text(widget.content, style: theme.textTheme.bodyMedium),
-
           if (widget.currentUserId != null &&
               widget.userId == widget.currentUserId)
             Align(
@@ -177,7 +192,6 @@ class _CommentCardState extends State<_CommentCard> {
                     icon: const Icon(Icons.edit, size: 16),
                     onPressed: () {
                       final viewModel = context.read<CommentViewModel>();
-                      // 수정
                       print('수정 클릭: ${widget.userId}');
                     },
                     visualDensity: const VisualDensity(
@@ -187,7 +201,7 @@ class _CommentCardState extends State<_CommentCard> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                  const SizedBox(width: 8), // ← 간격만 추가
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.delete, size: 16),
                     onPressed: () {
@@ -251,20 +265,47 @@ class _CommentCardState extends State<_CommentCard> {
       );
     }
 
+    if (_userFuture == null) {
+      return const SizedBox();
+    }
+
     return FutureBuilder<User>(
       future: _userFuture,
       builder: (context, snapshot) {
-        final name = snapshot.hasData ? snapshot.data!.nickname : '로딩 중';
-        return Row(
-          children: [
-            CircleAvatar(
-              radius: 10,
-              backgroundColor: theme.colorScheme.surfaceVariant,
-            ),
-            gap,
-            Text(name, style: theme.textTheme.bodySmall),
-          ],
-        );
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Row(
+            children: [
+              const CircleAvatar(radius: 10),
+              gap,
+              const Text('로딩 중...'),
+            ],
+          );
+        } else if (snapshot.hasData) {
+          final user = snapshot.data!;
+          return Row(
+            children: [
+              CircleAvatar(
+                radius: 10,
+                backgroundColor: theme.colorScheme.surfaceVariant,
+                child:
+                    user.profileImage != null
+                        ? ClipOval(
+                          child: Image.network(
+                            user.profileImage!,
+                            fit: BoxFit.cover,
+                            width: 20,
+                            height: 20,
+                          ),
+                        )
+                        : null,
+              ),
+              gap,
+              Text(user.nickname, style: theme.textTheme.bodySmall),
+            ],
+          );
+        } else {
+          return const Text('유저 정보 없음');
+        }
       },
     );
   }
