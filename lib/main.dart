@@ -1,4 +1,6 @@
 import 'package:ajoufinder/domain/interfaces/cookie_service.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarm_read_usecase.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarms_read_all_usecase.dart';
 import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/board_statuses_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
@@ -79,6 +81,8 @@ void main() async {
         )),  
         ChangeNotifierProvider(create: (_) => AlarmViewModel(
           getIt<AlarmsUsecase>(),
+          getIt<AlarmReadUsecase>(),
+          getIt<AlarmsReadAllUsecase>(),
         )),
         ChangeNotifierProvider(create: (_) => ConditionViewModel(
           getIt<ConditionsUsecase>(),

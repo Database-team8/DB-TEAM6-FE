@@ -14,6 +14,8 @@ import 'package:ajoufinder/domain/repository/condition_repository.dart';
 import 'package:ajoufinder/domain/repository/location_repository.dart';
 import 'package:ajoufinder/domain/repository/alarm_repository.dart';
 import 'package:ajoufinder/domain/repository/user_repository.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarm_read_usecase.dart';
+import 'package:ajoufinder/domain/usecases/alarm/alarms_read_all_usecase.dart';
 import 'package:ajoufinder/domain/usecases/alarm/alarms_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/board_statuses_usecase.dart';
 import 'package:ajoufinder/domain/usecases/boards/delete_board_usecase.dart';
@@ -54,7 +56,6 @@ Future<void> setUpDependencies() async {
   getIt.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl());
   getIt.registerLazySingleton<AlarmRepository>(() => AlarmRepositoryImpl(
     getIt<http.Client>(),
-    getIt<CookieService>(),
   ));
   getIt.registerLazySingleton<UserRepository>(() => UserRepositoryImpl(
     getIt<http.Client>(),
@@ -143,5 +144,11 @@ Future<void> setUpDependencies() async {
   ));
   getIt.registerFactory<DeleteConditionUsecase>(() => DeleteConditionUsecase(
     getIt<ConditionRepository>()
+  ));
+  getIt.registerFactory<AlarmReadUsecase>(() => AlarmReadUsecase(
+    getIt<AlarmRepository>()
+  ));
+  getIt.registerFactory<AlarmsReadAllUsecase>(() => AlarmsReadAllUsecase(
+    getIt<AlarmRepository>()
   ));
 }

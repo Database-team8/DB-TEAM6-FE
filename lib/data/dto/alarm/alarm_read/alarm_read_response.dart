@@ -1,0 +1,3 @@
+class AlarmReadResponse {
+  AlarmReadResponse();
+}

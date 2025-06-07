@@ -100,10 +100,10 @@ class _AlarmCardState extends State<_AlarmCard> {
 
     // 읽음 여부에 따른 배경색 및 텍스트 색상
     final cardBackgroundColor = isCurrentlyRead
-        ? theme.colorScheme.surface.withValues(alpha: 0.5) // 읽은 알림은 약간 흐리게
+        ? theme.colorScheme.surfaceTint // 읽은 알림은 약간 흐리게
         : theme.cardColor; // 안 읽은 알림은 기본 카드 색상
     final contentColor = isCurrentlyRead
-        ? theme.colorScheme.onSurface.withValues(alpha: 0.6) // 읽은 알림 텍스트는 약간 흐리게
+        ? theme.colorScheme.onSurfaceVariant
         : theme.colorScheme.onSurface;
 
     // 보여줄 내용 결정 (확장 시 전체, 아닐 시 일부)

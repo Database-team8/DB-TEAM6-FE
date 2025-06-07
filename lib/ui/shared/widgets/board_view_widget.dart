@@ -112,6 +112,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                                     navigatorBarViewModel.currentIndex == 0
                                         ? 'lost'
                                         : 'found',
+                                        editedBoard: board,
                               ),
                             ),
                           ),
@@ -272,6 +273,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     }
 
     final Board? board = boardViewModel.selectedBoard;
+
     if (board == null) {
       return Scaffold(
         backgroundColor: theme.colorScheme.surface,
@@ -449,7 +451,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
                 (author.profileImage != null && author.profileImage!.isNotEmpty)
                     ? NetworkImage(author.profileImage!)
                     : null,
-            backgroundColor: theme.colorScheme.surfaceVariant, // 배경색 추가
+            backgroundColor: theme.colorScheme.surfaceTint,
             child:
                 (author.profileImage == null || author.profileImage!.isEmpty)
                     ? Icon(
