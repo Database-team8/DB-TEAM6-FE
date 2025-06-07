@@ -268,7 +268,7 @@ class _CommentCardState extends State<_CommentCard> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder:
-          (_) => Padding(
+          (bottomSheetContext) => Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               left: 16,
@@ -325,21 +325,35 @@ class _CommentCardState extends State<_CommentCard> {
                 ),
               ),
               commentFocusNode: _editFocusNode,
-              onCommentSubmitted: _handleCommentUpdate,
+              onCommentSubmittedAsync: (updatedText) async {
+                await _handleCommentUpdate(updatedText);
+                if (!bottomSheetContext.mounted) return;
+                Navigator.pop(bottomSheetContext); 
+              },
               onMorePressed: () {},
             ),
           ),
     );
   }
 
-  void _handleCommentUpdate(String updatedText) async {
-    final commentViewModel = context.read<CommentViewModel>();
+  Future<void> _handleCommentUpdate(String updatedText) async {
+  // ViewModel과 request 객체는 async gap 이전에 준비합니다.
+  final commentViewModel = context.read<CommentViewModel>();
+  final request = UpdateCommentRequest(
+    content: updatedText,
+    isSecret: isSecret,
+  );
 
-    final request = UpdateCommentRequest(
-      content: updatedText,
-      isSecret: isSecret,
-    );
+  try {
     await commentViewModel.updateComment(boardId, commentId, request);
     await commentViewModel.fetchComments(boardId);
+
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('댓글 수정에 실패했습니다: $e')),
+    );
   }
+}
+
 }

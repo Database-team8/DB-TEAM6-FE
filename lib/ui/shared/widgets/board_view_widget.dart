@@ -60,7 +60,7 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
     super.dispose();
   }
 
-  void _submitComment(BuildContext context, int boardId, String commentText) async {
+  Future<void> _submitComment(BuildContext context, int boardId, String commentText) async {
     final authViewModel = context.read<AuthViewModel>();
     final commentViewModel = context.read<CommentViewModel>();
 
@@ -603,8 +603,8 @@ class _BoardViewWidgetState extends State<BoardViewWidget> {
       boardId: boardId,
       isSecret: _isSecretComment,
       commentController: _commentController,
-      onCommentSubmitted : (commentText) {
-        _submitComment(context, boardId, commentText);
+      onCommentSubmittedAsync : (commentText) async {
+        await _submitComment(context, boardId, commentText);
       },
       leadingWidget: Row(
         mainAxisSize: MainAxisSize.min,

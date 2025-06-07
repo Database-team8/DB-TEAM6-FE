@@ -5,7 +5,7 @@ class CustomCommentFab extends StatefulWidget {
   final bool isSecret;
   final Widget? leadingWidget;
   final VoidCallback onMorePressed;
-  final void Function(String commentText)? onCommentSubmitted;
+  final Future<void> Function(String commentText)? onCommentSubmittedAsync;
   final Widget mainContentWhenCollapsed;
   final double collapsedHeight;
   final double expandedHeight;
@@ -39,7 +39,7 @@ class CustomCommentFab extends StatefulWidget {
     required this.commentController,
     this.commentFocusNode,
     this.editingCommentId, 
-    this.onCommentSubmitted,
+    this.onCommentSubmittedAsync,
   });
 
   @override
@@ -96,10 +96,10 @@ class _CustomCommentFabState extends State<CustomCommentFab>
     });
   }
 
-  void _submitAndCollapse() {
+  void _submitAndCollapse() async {
     final commentText = widget.commentController.text.trim();
     if (commentText.isNotEmpty) {  
-      widget.onCommentSubmitted?.call(commentText);
+      widget.onCommentSubmittedAsync?.call(commentText);
       widget.commentController.clear(); 
     }
     _toggleExpand();
