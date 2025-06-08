@@ -32,30 +32,36 @@ Widget buildGenericDropdown<T>({
     );
   }
   if (error != null) {
-    return Text('$hintText 로딩 실패', style: TextStyle(color: theme.colorScheme.error));
+    return Text(
+      '$hintText 로딩 실패',
+      style: TextStyle(color: theme.colorScheme.error),
+    );
   }
   if (items.isEmpty) {
     return Text(emptyText);
   }
 
   final dropdown = DropdownButton<T>(
-    icon: icon ?? Icon(Icons.keyboard_arrow_down_rounded, color: effectiveLineColor),
+    icon:
+        icon ??
+        Icon(Icons.keyboard_arrow_down_rounded, color: effectiveLineColor),
     hint: Text(
       hintText,
       style: theme.textTheme.labelMedium!.copyWith(color: effectiveLineColor),
     ),
     value: selectedValue,
-    items: items.map((T value) {
-      return DropdownMenuItem<T>(
-        value: value,
-        child: Text(
-          labelBuilder(value),
-          style: theme.textTheme.labelMedium!.copyWith(
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-      );
-    }).toList(),
+    items:
+        items.map((T value) {
+          return DropdownMenuItem<T>(
+            value: value,
+            child: Text(
+              labelBuilder(value),
+              style: theme.textTheme.labelMedium!.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          );
+        }).toList(),
     onChanged: (T? newValue) async {
       if (onChanged != null) onChanged(newValue);
       if (onChangedAsync != null) await onChangedAsync();
@@ -72,16 +78,17 @@ Widget buildGenericDropdown<T>({
         prefixIcon: prefixIcon,
       ),
       isExpanded: true,
-      items: items.map((T value) {
-        return DropdownMenuItem<T>(
-          value: value,
-          child: Text(labelBuilder(value)),
-        );
-      }).toList(),
+      items:
+          items.map((T value) {
+            return DropdownMenuItem<T>(
+              value: value,
+              child: Text(labelBuilder(value)),
+            );
+          }).toList(),
       onChanged: (T? newValue) async {
-      if (onChanged != null) onChanged(newValue);
-      if (onChangedAsync != null) await onChangedAsync();
-    },
+        if (onChanged != null) onChanged(newValue);
+        if (onChangedAsync != null) await onChangedAsync();
+      },
       validator: validator,
     );
   }

@@ -24,7 +24,6 @@ class LoggedInScreen extends StatefulWidget {
 }
 
 class _LoggedInScreenState extends State<LoggedInScreen> {
-
   void _onItemTapped(int index) {
     setState(() {
       Provider.of<NavigatorBarViewModel>(
@@ -59,163 +58,209 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
     final filterStateViewModel = context.watch<FilterStateViewModel>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-    final error = filterStateViewModel.filterError;
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-    }
-  });
+      final error = filterStateViewModel.filterError;
+      if (error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
+    });
 
-    return filterStateViewModel.isFiltering 
-    ? const Center(child: CircularProgressIndicator())
-    : Scaffold(
-      appBar: PreferredSize(
-        preferredSize:
-            pageViewModel.extendAppbar
-                ? Size.fromHeight(kToolbarHeight * 2)
-                : Size.fromHeight(kToolbarHeight),
+    return filterStateViewModel.isFiltering
+        ? const Center(child: CircularProgressIndicator())
+        : Scaffold(
+          appBar: PreferredSize(
+            preferredSize:
+                pageViewModel.extendAppbar
+                    ? Size.fromHeight(kToolbarHeight * 2)
+                    : Size.fromHeight(kToolbarHeight),
 
-        child:
-            pageViewModel.showAppbar
-                ? AppBar(
-                  title: SearchBarWidget(
-                    controller: pageViewModel.searchController,
-                    hintText: pageViewModel.hintText!,
-                    onSubmitted: pageViewModel.performSearch!,
-                    focusNode: pageViewModel.searchFocusNode,
-                    onClear: pageViewModel.onClear,
-                  ),
-                  actions: _buildActions(),
-                  automaticallyImplyLeading:
-                      pageViewModel.isSearchBarWidgetActivated,
-                  bottom:
-                      pageViewModel.extendAppbar
-                          ? PreferredSize(
-                            preferredSize: Size.fromHeight(kToolbarHeight),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                                vertical: 4.0,
+            child:
+                pageViewModel.showAppbar
+                    ? AppBar(
+                      title: SearchBarWidget(
+                        controller: pageViewModel.searchController,
+                        hintText: pageViewModel.hintText!,
+                        onSubmitted: pageViewModel.performSearch!,
+                        focusNode: pageViewModel.searchFocusNode,
+                        onClear: pageViewModel.onClear,
+                      ),
+                      actions: _buildActions(),
+                      automaticallyImplyLeading:
+                          pageViewModel.isSearchBarWidgetActivated,
+                      bottom:
+                          pageViewModel.extendAppbar
+                              ? PreferredSize(
+                                preferredSize: Size.fromHeight(kToolbarHeight),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3.0,
+                                    vertical: 4.0,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      buildGenericDropdown<Location>(
+                                        hintText: '위치',
+                                        selectedValue:
+                                            filterStateViewModel
+                                                .selectedLocation,
+                                        items:
+                                            filterStateViewModel
+                                                .availableLocations,
+                                        isLoading:
+                                            filterStateViewModel
+                                                .isLoadingLocations,
+                                        error:
+                                            filterStateViewModel.locationsError,
+                                        emptyText: '위치 정보 없음',
+                                        labelBuilder: (loc) => loc.locationName,
+                                        onChanged:
+                                            (newValue) => filterStateViewModel
+                                                .setSelectedLocation(newValue),
+                                        onChangedAsync:
+                                            () =>
+                                                filterStateViewModel.sendQuery(
+                                                  context
+                                                      .read<BoardViewModel>(),
+                                                  context
+                                                      .read<
+                                                        NavigatorBarViewModel
+                                                      >()
+                                                      .currentIndex,
+                                                ),
+                                        theme: theme,
+                                      ),
+
+                                      const SizedBox(width: 8),
+                                      buildGenericDropdown<ItemType>(
+                                        hintText: '종류',
+                                        selectedValue:
+                                            filterStateViewModel
+                                                .selectedItemType,
+                                        items:
+                                            filterStateViewModel
+                                                .availableItemTypes,
+                                        isLoading:
+                                            filterStateViewModel
+                                                .isLoadingItemTypes,
+                                        error:
+                                            filterStateViewModel.itemTypesError,
+                                        emptyText: '종류 정보 없음',
+                                        labelBuilder: (type) => type.itemType,
+                                        onChanged:
+                                            (newValue) => filterStateViewModel
+                                                .setSelectedItemType(newValue),
+                                        onChangedAsync:
+                                            () =>
+                                                filterStateViewModel.sendQuery(
+                                                  context
+                                                      .read<BoardViewModel>(),
+                                                  context
+                                                      .read<
+                                                        NavigatorBarViewModel
+                                                      >()
+                                                      .currentIndex,
+                                                ),
+                                        theme: theme,
+                                      ),
+
+                                      const SizedBox(width: 8),
+                                      buildGenericDropdown<String>(
+                                        hintText: '상태',
+                                        selectedValue:
+                                            filterStateViewModel.selectedStatus,
+                                        items:
+                                            filterStateViewModel
+                                                .availableStatuses,
+                                        isLoading:
+                                            filterStateViewModel
+                                                .isLoadingStatuses,
+                                        error:
+                                            filterStateViewModel.statusesError,
+                                        emptyText: '상태 정보 없음',
+                                        labelBuilder: (status) => status,
+                                        onChanged:
+                                            (newValue) => filterStateViewModel
+                                                .setSelectedStatus(newValue),
+                                        onChangedAsync:
+                                            () =>
+                                                filterStateViewModel.sendQuery(
+                                                  context
+                                                      .read<BoardViewModel>(),
+                                                  context
+                                                      .read<
+                                                        NavigatorBarViewModel
+                                                      >()
+                                                      .currentIndex,
+                                                ),
+                                        theme: theme,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildDatePickerButton(
+                                        label: '시작',
+                                        date: filterStateViewModel.startDate,
+                                        onPressed: _selectFirstDate,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildDatePickerButton(
+                                        label: '끝',
+                                        date: filterStateViewModel.endDate,
+                                        onPressed: _selectEndDate,
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              : null,
+                      backgroundColor:
+                          Colors.transparent, // 또는 theme.colorScheme.surface
+                      elevation: 6.0, // AppBar 그림자 조정 (선택)
+                      scrolledUnderElevation:
+                          theme.appBarTheme.scrolledUnderElevation ?? 4.0,
+                    )
+                    : const SizedBox(),
+          ),
+          body: ScreenWrapper(),
+          bottomNavigationBar: BottomNavBar(onTap: _onItemTapped),
+          backgroundColor: theme.colorScheme.surface,
+          floatingActionButton:
+              pageViewModel.showFab
+                  ? FloatingActionButton.extended(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 400,
+                                  ),
+                                  child: PostBoardWidget(
+                                    lostCategory:
+                                        navigatorBarViewModel.currentIndex == 0
+                                            ? 'lost'
+                                            : 'found',
+                                  ),
+                                ),
                               ),
-                              child: Row(
-                                children: [
-                                  buildGenericDropdown<Location>(
-                                    hintText: '위치',
-                                    selectedValue: filterStateViewModel.selectedLocation,
-                                    items:
-                                        filterStateViewModel.availableLocations,
-                                    isLoading:
-                                        filterStateViewModel.isLoadingLocations,
-                                    error: filterStateViewModel.locationsError,
-                                    emptyText: '위치 정보 없음',
-                                    labelBuilder: (loc) => loc.locationName,
-                                    onChanged: (newValue) => filterStateViewModel.setSelectedLocation(newValue),
-                                    onChangedAsync: () => filterStateViewModel.sendQuery(
-                                      context.read<BoardViewModel>(),
-                                      context.read<NavigatorBarViewModel>().currentIndex,
-                                    ),
-                                    theme: theme,
-                                  ),
-
-                                  const SizedBox(width: 8),
-                                  buildGenericDropdown<ItemType>(
-                                    hintText: '종류',
-                                    selectedValue: filterStateViewModel.selectedItemType,
-                                    items:
-                                        filterStateViewModel.availableItemTypes,
-                                    isLoading:
-                                        filterStateViewModel.isLoadingItemTypes,
-                                    error: filterStateViewModel.itemTypesError,
-                                    emptyText: '종류 정보 없음',
-                                    labelBuilder: (type) => type.itemType,
-                                    onChanged: (newValue) => filterStateViewModel.setSelectedItemType(newValue),
-                                    onChangedAsync: () => filterStateViewModel.sendQuery(
-                                      context.read<BoardViewModel>(),
-                                      context.read<NavigatorBarViewModel>().currentIndex,
-                                    ),
-                                    theme: theme,
-                                  ),
-
-                                  const SizedBox(width: 8),
-                                  buildGenericDropdown<String>(
-                                    hintText: '상태',
-                                    selectedValue: filterStateViewModel.selectedStatus,
-                                    items: filterStateViewModel.availableStatuses,
-                                    isLoading: filterStateViewModel.isLoadingStatuses,
-                                    error: filterStateViewModel.statusesError,
-                                    emptyText: '상태 정보 없음',
-                                    labelBuilder: (status) => status,
-                                    onChanged: (newValue) => filterStateViewModel.setSelectedStatus(newValue),
-                                    onChangedAsync: () => filterStateViewModel.sendQuery(
-                                      context.read<BoardViewModel>(),
-                                      context.read<NavigatorBarViewModel>().currentIndex,
-                                    ),
-                                    theme: theme,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildDatePickerButton(
-                                    label: '시작',
-                                    date: filterStateViewModel.startDate,
-                                    onPressed: _selectFirstDate,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildDatePickerButton(
-                                    label: '끝',
-                                    date: filterStateViewModel.endDate,
-                                    onPressed: _selectEndDate,
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                              ),
-                            ),
-                          )
-                          : null,
-                  backgroundColor:
-                      Colors.transparent, // 또는 theme.colorScheme.surface
-                  elevation: 6.0, // AppBar 그림자 조정 (선택)
-                  scrolledUnderElevation:
-                      theme.appBarTheme.scrolledUnderElevation ?? 4.0,
-                )
-                : const SizedBox(),
-      ),
-      body: ScreenWrapper(),
-      bottomNavigationBar: BottomNavBar(onTap: _onItemTapped),
-      backgroundColor: theme.colorScheme.surface,
-      floatingActionButton:
-          pageViewModel.showFab
-              ? FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 400),
-                              child: PostBoardWidget(
-                                lostCategory:
-                                    navigatorBarViewModel.currentIndex == 0
-                                        ? 'lost'
-                                        : 'found',
-                              ),
-                            ),
-                          ),
+                        ),
+                      );
+                    },
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Text(pageViewModel.fabLabelText!),
                     ),
-                  );
-                },
-                label: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Text(pageViewModel.fabLabelText!),
-                ),
-                icon: Icon(pageViewModel.fabIconData),
-              )
-              : const SizedBox(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      extendBodyBehindAppBar: true,
-      extendBody: true,
-    );
+                    icon: Icon(pageViewModel.fabIconData),
+                  )
+                  : const SizedBox(),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+          extendBodyBehindAppBar: true,
+          extendBody: true,
+        );
   }
 
   List<Widget> _buildActions() {
@@ -290,7 +335,8 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
   Future<void> _selectFirstDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: context.read<FilterStateViewModel>().startDate ?? DateTime.now(),
+      initialDate:
+          context.read<FilterStateViewModel>().startDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2025).add(const Duration(days: 365)),
     );
@@ -298,21 +344,22 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
       final filterStateViewModel = context.read<FilterStateViewModel>();
 
       if (picked != null && picked != filterStateViewModel.startDate) {
-      filterStateViewModel.setStartDate(picked);
-      await filterStateViewModel.sendQuery(
-        context.read<BoardViewModel>(),
-        context.read<NavigatorBarViewModel>().currentIndex,
-      );
-    }
+        filterStateViewModel.setStartDate(picked);
+        await filterStateViewModel.sendQuery(
+          context.read<BoardViewModel>(),
+          context.read<NavigatorBarViewModel>().currentIndex,
+        );
+      }
     } else {
       return;
-    }    
+    }
   }
 
   Future<void> _selectEndDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: context.read<FilterStateViewModel>().endDate ?? DateTime.now(),
+      initialDate:
+          context.read<FilterStateViewModel>().endDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2025).add(const Duration(days: 365)),
     );
@@ -320,15 +367,15 @@ class _LoggedInScreenState extends State<LoggedInScreen> {
       final filterStateViewModel = context.read<FilterStateViewModel>();
 
       if (picked != null && picked != filterStateViewModel.endDate) {
-      filterStateViewModel.setEndDate(picked);
-      await filterStateViewModel.sendQuery(
-        context.read<BoardViewModel>(),
-        context.read<NavigatorBarViewModel>().currentIndex,
-      );
-    }
+        filterStateViewModel.setEndDate(picked);
+        await filterStateViewModel.sendQuery(
+          context.read<BoardViewModel>(),
+          context.read<NavigatorBarViewModel>().currentIndex,
+        );
+      }
     } else {
       return;
-    }    
+    }
   }
 
   Widget _buildDatePickerButton({
