@@ -114,9 +114,9 @@ class BoardViewModel extends ChangeNotifier{
     
     try {
       if (category == 'lost') {
-        _boardItems = await _lostBoardsUsecase.execute();
+        _boardItems = await _lostBoardsUsecase.execute(size : 100);
       } else if (category == 'found') {
-        _boardItems = await _foundBoardsUsecase.execute();
+        _boardItems = await _foundBoardsUsecase.execute(size : 100);
       } else {
         _boardItems = [];
       }
@@ -135,7 +135,7 @@ class BoardViewModel extends ChangeNotifier{
     _setLoadingBoards(true);
 
     try {
-      _boardItems = await _myBoardsUsecase.execute();
+      _boardItems = await _myBoardsUsecase.execute(size : 100);
       _boardError = null; // 성공 시 오류 메시지 초기화
       print('BoardViewModel: 내 게시글 목록 로드 성공 - ${_boardItems.length}개');
     } catch (e) {

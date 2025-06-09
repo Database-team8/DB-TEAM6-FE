@@ -1,20 +1,20 @@
 import 'package:ajoufinder/domain/entities/alarm.dart';
+import 'package:ajoufinder/ui/shared/widgets/board_view_widget.dart';
 import 'package:ajoufinder/ui/viewmodels/alarm_view_model.dart';
+import 'package:ajoufinder/ui/viewmodels/board_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class AlarmListWidget extends StatelessWidget{
-  final List<Alarm> alarms;
 
-  const AlarmListWidget({
-    super.key, 
-    required this.alarms, 
-  });
+  const AlarmListWidget({super.key,});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final alarmViewModel = context.watch<AlarmViewModel>();
+    final alarms = alarmViewModel.alarms;
 
     if (alarms.isEmpty) {
       return Center(
@@ -80,16 +80,50 @@ class _AlarmCardState extends State<_AlarmCard> {
 
   Future<void> _launchURL(String urlString) async {
     final Uri url = Uri.parse(urlString);
-    // if (await canLaunchUrl(url)) {
-    //   await launchUrl(url);
-    // } else {
-    //   // URL 실행 실패 시 사용자에게 알림 (예: 스낵바)
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('연결된 페이지를 열 수 없습니다: $urlString')),
-    //   );
-    //   print('Could not launch $urlString');
-    // }
-     print('URL 실행 시도: $urlString (url_launcher 패키지 필요)');
+    final boardViewModel = context.read<BoardViewModel>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      final success = await boardViewModel.fetchBoardDetails(widget.alarm.relatedBoardId);
+
+      if (!navigator.mounted) {
+        return;
+      } else {
+        if (success) {
+          // 게시글 상세 정보가 성공적으로 로드됨
+          
+          navigator.push(
+            MaterialPageRoute(
+              builder: (context) => Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: const BoardViewWidget(),
+                    ),
+                  ),
+            ),
+          );
+        } else {
+          // 게시글 상세 정보 로드 실패
+          final errorMessage = boardViewModel.boardError ?? '게시글 상세 정보를 불러오는 데 실패했습니다.';
+          scaffoldMessenger.showSnackBar(SnackBar(content: Text(errorMessage)));
+          print('_navigateToBoardDetail 오류: $errorMessage');
+          return;
+        }
+      }
+    }catch (e) {
+      if (!navigator.mounted) {
+        return;
+      } else {
+        final errorMessage = boardViewModel.boardError ?? e.toString();
+
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+        print('_navigateToBoardDetail 오류: $errorMessage');
+      }
+    }
+    print('URL 실행 시도: $urlString (url_launcher 패키지 필요)');
   }
 
 @override

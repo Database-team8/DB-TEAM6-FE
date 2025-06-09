@@ -5,11 +5,13 @@ class AlarmsResponse {
 
   AlarmsResponse({required this.alarms});
 
-  factory AlarmsResponse.fromJson(List<dynamic> jsonList) {
+  factory AlarmsResponse.fromJson(List<dynamic>? jsonList) {
     return AlarmsResponse(
-      alarms: jsonList
-          .map((item) => Alarm.fromJson(item as Map<String, dynamic>))
-          .toList(),
+      alarms: (jsonList == null)
+          ? <Alarm>[]
+          : jsonList
+              .map((item) => Alarm.fromJson(item as Map<String, dynamic>))
+              .toList(),
     );
   }
 }

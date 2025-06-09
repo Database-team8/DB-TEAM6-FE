@@ -117,9 +117,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return RefreshIndicator(
       onRefresh: _fetchAlarms, 
       color: theme.colorScheme.primary,
-      child: AlarmListWidget(
-        alarms: alarmViewModel.alarms,
-      ),
+      child: AlarmListWidget(),
     );
   }
 }
